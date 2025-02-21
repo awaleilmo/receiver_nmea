@@ -1,6 +1,7 @@
 import os
 import sqlite3
 from config import DB_NAME
+from database import create_table
 
 
 def reset_database():
@@ -9,33 +10,7 @@ def reset_database():
         os.remove(DB_NAME)
         print(f"Database {DB_NAME} dihapus.")
 
-    connection = sqlite3.connect(DB_NAME)
-    cursor = connection.cursor()
-
-    # Tabel utama untuk data AIS/NMEA
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS nmea (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            nmea TEXT NOT NULL,
-            created_at TEXT NOT NULL,
-            updated_at TEXT NOT NULL
-        )
-    """)
-
-    # Tabel untuk menyimpan history pergerakan kapal
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS ais_history (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            mmsi TEXT NOT NULL,
-            nmea TEXT NOT NULL,
-            received_at TEXT NOT NULL,
-            created_at TEXT NOT NULL,
-            updated_at TEXT NOT NULL
-        )
-    """)
-
-    connection.commit()
-    connection.close()
+    create_table()
     print("Database berhasil dibuat ulang.")
 
 

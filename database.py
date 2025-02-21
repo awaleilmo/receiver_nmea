@@ -22,10 +22,12 @@ def create_table():
         CREATE TABLE IF NOT EXISTS ais_history (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             mmsi TEXT NOT NULL,
-            nmea TEXT NOT NULL,
-            received_at TEXT NOT NULL,
-            created_at TEXT NOT NULL,
-            updated_at TEXT NOT NULL
+            lat REAL,
+            lon REAL,
+            sog REAL,  -- Speed Over Ground (Kecepatan)
+            cog REAL,  -- Course Over Ground (Arah Kapal)
+            ship_type TEXT,
+            received_at TEXT NOT NULL
         )
     """)
 
@@ -41,13 +43,16 @@ def save_to_database(nmea_data):
     connection.commit()
     connection.close()
 
-def save_history(mmsi, nmea_data):
-    """Menyimpan pergerakan kapal berdasarkan MMSI."""
+def save_ais_data(mmsi, lat, lon, sog, cog, ship_type):
+    """Menyimpan data AIS yang sudah didecode ke database."""
     connection = sqlite3.connect(DB_NAME)
     cursor = connection.cursor()
     timestamp = datetime.datetime.now().isoformat()
 
-    cursor.execute("INSERT INTO ais_history (mmsi, nmea, received_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?)", (mmsi, nmea_data, timestamp, timestamp, timestamp))
+    cursor.execute("""
+            INSERT INTO ais_history (mmsi, lat, lon, sog, cog, ship_type, received_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (mmsi, lat, lon, sog, cog, ship_type, timestamp))
 
     connection.commit()
     connection.close()
