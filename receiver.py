@@ -1,7 +1,8 @@
 import socket
 import json
 from pyais import decode
-from database import save_to_database, save_ais_data
+from database import save_to_database
+from constollers import save_ais_data
 from config import  HOST, PORT
 
 ais_buffer = {}

@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    
+        <script>
+            L_NO_TOUCH = false;
+            L_DISABLE_3D = false;
+        </script>
+    
+    <style>html, body {width: 100%;height: 100%;margin: 0;padding: 0;}</style>
+    <style>#map {position:absolute;top:0;bottom:0;right:0;left:0;}</style>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_3391b0443bfae038bdd963e95774081c {
+                    position: relative;
+                    width: 100.0%;
+                    height: 100.0%;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+                .leaflet-container { font-size: 1rem; }
+            </style>
+        
+</head>
+<body>
+    
+    
+            <div class="folium-map" id="map_3391b0443bfae038bdd963e95774081c" ></div>
+        
+</body>
+<script>
+    
+    
+            var map_3391b0443bfae038bdd963e95774081c = L.map(
+                "map_3391b0443bfae038bdd963e95774081c",
+                {
+                    center: [-6.111742, 106.86773],
+                    crs: L.CRS.EPSG3857,
+                    ...{
+  "zoom": 5,
+  "zoomControl": true,
+  "preferCanvas": false,
+}
+
+                }
+            );
+
+            
+
+        
+    
+            var tile_layer_a56bdc60c3d3bdb43920edb7ded5e1b5 = L.tileLayer(
+                "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                {
+  "minZoom": 0,
+  "maxZoom": 19,
+  "maxNativeZoom": 19,
+  "noWrap": false,
+  "attribution": "\u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors",
+  "subdomains": "abc",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_a56bdc60c3d3bdb43920edb7ded5e1b5.addTo(map_3391b0443bfae038bdd963e95774081c);
+        
+    
+            var marker_393a9588b179cf4cea62fb37372c2346 = L.marker(
+                [-6.111742, 106.86773],
+                {
+}
+            ).addTo(map_3391b0443bfae038bdd963e95774081c);
+        
+    
+            var icon_fde22f6cfc47105b6712912b9845b95b = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "ship",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+            marker_393a9588b179cf4cea62fb37372c2346.setIcon(icon_fde22f6cfc47105b6712912b9845b95b);
+        
+    
+        var popup_193bed3485299bf99ef2230f70eaafa0 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_058a03c6ec596b66969c9a1bb54f86fb = $(`<div id="html_058a03c6ec596b66969c9a1bb54f86fb" style="width: 100.0%; height: 100.0%;">MMSI: 525301135 Lat: -6.111742, Lon: 106.86773 Speed: 0.0 knots Course: 138.9°</div>`)[0];
+                popup_193bed3485299bf99ef2230f70eaafa0.setContent(html_058a03c6ec596b66969c9a1bb54f86fb);
+            
+        
+
+        marker_393a9588b179cf4cea62fb37372c2346.bindPopup(popup_193bed3485299bf99ef2230f70eaafa0)
+        ;
+
+        
+    
+    
+            var marker_2e173c4b0232da8fef8a82caec5c7142 = L.marker(
+                [-6.107557, 106.873748],
+                {
+}
+            ).addTo(map_3391b0443bfae038bdd963e95774081c);
+        
+    
+            var icon_68fa3b457ffb18437067826458ea321b = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "ship",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+            marker_2e173c4b0232da8fef8a82caec5c7142.setIcon(icon_68fa3b457ffb18437067826458ea321b);
+        
+    
+        var popup_d4ee9728ef10f4e5add3c3ac158fcc6c = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_1cc96a18de6928230b7b134a8037439c = $(`<div id="html_1cc96a18de6928230b7b134a8037439c" style="width: 100.0%; height: 100.0%;">MMSI: 525501465 Lat: -6.107557, Lon: 106.873748 Speed: 0.0 knots Course: 318.9°</div>`)[0];
+                popup_d4ee9728ef10f4e5add3c3ac158fcc6c.setContent(html_1cc96a18de6928230b7b134a8037439c);
+            
+        
+
+        marker_2e173c4b0232da8fef8a82caec5c7142.bindPopup(popup_d4ee9728ef10f4e5add3c3ac158fcc6c)
+        ;
+
+        
+    
+    
+            var marker_4118dc961e3876147665a76501d18444 = L.marker(
+                [-6.112262, 106.867292],
+                {
+}
+            ).addTo(map_3391b0443bfae038bdd963e95774081c);
+        
+    
+            var icon_8a739efefcca6414e7a43de6357652f6 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "ship",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+            marker_4118dc961e3876147665a76501d18444.setIcon(icon_8a739efefcca6414e7a43de6357652f6);
+        
+    
+        var popup_3a9f738d51c738d8ce05c48097d3fab1 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_6ed10a4b29c938be48c3ee5fc105582d = $(`<div id="html_6ed10a4b29c938be48c3ee5fc105582d" style="width: 100.0%; height: 100.0%;">MMSI: 372872000 Lat: -6.112262, Lon: 106.867292 Speed: 0.1 knots Course: 0.0°</div>`)[0];
+                popup_3a9f738d51c738d8ce05c48097d3fab1.setContent(html_6ed10a4b29c938be48c3ee5fc105582d);
+            
+        
+
+        marker_4118dc961e3876147665a76501d18444.bindPopup(popup_3a9f738d51c738d8ce05c48097d3fab1)
+        ;
+
+        
+    
+    
+            var marker_5bf2b8808972acbeb7d879881415e512 = L.marker(
+                [-6.108525, 106.873553],
+                {
+}
+            ).addTo(map_3391b0443bfae038bdd963e95774081c);
+        
+    
+            var icon_ccb0654cb2537ab09e3cf0da6e470d56 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "ship",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+            marker_5bf2b8808972acbeb7d879881415e512.setIcon(icon_ccb0654cb2537ab09e3cf0da6e470d56);
+        
+    
+        var popup_11aa4de948477c66d454217fcd2e58fd = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_4f1a88b91e74f4faddc8317c1b1a506f = $(`<div id="html_4f1a88b91e74f4faddc8317c1b1a506f" style="width: 100.0%; height: 100.0%;">MMSI: 525900985 Lat: -6.108525, Lon: 106.873553 Speed: 0.0 knots Course: 360.0°</div>`)[0];
+                popup_11aa4de948477c66d454217fcd2e58fd.setContent(html_4f1a88b91e74f4faddc8317c1b1a506f);
+            
+        
+
+        marker_5bf2b8808972acbeb7d879881415e512.bindPopup(popup_11aa4de948477c66d454217fcd2e58fd)
+        ;
+
+        
+    
+    
+            var marker_6dbb2c293f3fe413443145e9b0040a2f = L.marker(
+                [-6.111673, 106.86778],
+                {
+}
+            ).addTo(map_3391b0443bfae038bdd963e95774081c);
+        
+    
+            var icon_342608d4bee10f3ae9c873ddf759af29 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "ship",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+            marker_6dbb2c293f3fe413443145e9b0040a2f.setIcon(icon_342608d4bee10f3ae9c873ddf759af29);
+        
+    
+        var popup_c2419ea4f5a9f1119f0d36bfbdc5440f = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_0d623ef7fa70b40f63522539e1125497 = $(`<div id="html_0d623ef7fa70b40f63522539e1125497" style="width: 100.0%; height: 100.0%;">MMSI: 525401104 Lat: -6.111673, Lon: 106.86778 Speed: 0.0 knots Course: 0.0°</div>`)[0];
+                popup_c2419ea4f5a9f1119f0d36bfbdc5440f.setContent(html_0d623ef7fa70b40f63522539e1125497);
+            
+        
+
+        marker_6dbb2c293f3fe413443145e9b0040a2f.bindPopup(popup_c2419ea4f5a9f1119f0d36bfbdc5440f)
+        ;
+
+        
+    
+    
+            var marker_c65a8c503ea69025665c55b0ff88f125 = L.marker(
+                [-6.095762, 106.882697],
+                {
+}
+            ).addTo(map_3391b0443bfae038bdd963e95774081c);
+        
+    
+            var icon_ab4ea3e7f4bc2f02decc52e19e580449 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "ship",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+            marker_c65a8c503ea69025665c55b0ff88f125.setIcon(icon_ab4ea3e7f4bc2f02decc52e19e580449);
+        
+    
+        var popup_2d85d51f5d8b6eb03b6ff183fe37f1bc = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_f97b9765750d3f72b444c23062ce1213 = $(`<div id="html_f97b9765750d3f72b444c23062ce1213" style="width: 100.0%; height: 100.0%;">MMSI: 352004330 Lat: -6.095762, Lon: 106.882697 Speed: 0.0 knots Course: 257.1°</div>`)[0];
+                popup_2d85d51f5d8b6eb03b6ff183fe37f1bc.setContent(html_f97b9765750d3f72b444c23062ce1213);
+            
+        
+
+        marker_c65a8c503ea69025665c55b0ff88f125.bindPopup(popup_2d85d51f5d8b6eb03b6ff183fe37f1bc)
+        ;
+
+        
+    
+    
+            var marker_82b240cdb51d269b9c4e3c17a18b5aef = L.marker(
+                [-6.111127, 106.869665],
+                {
+}
+            ).addTo(map_3391b0443bfae038bdd963e95774081c);
+        
+    
+            var icon_48513b09cda894aa82582f5f87a3044f = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "ship",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+            marker_82b240cdb51d269b9c4e3c17a18b5aef.setIcon(icon_48513b09cda894aa82582f5f87a3044f);
+        
+    
+        var popup_c3b761d621a5638d9c24f470fc2c9730 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_c344c0df859d9b4e2ba3b4ca447b0438 = $(`<div id="html_c344c0df859d9b4e2ba3b4ca447b0438" style="width: 100.0%; height: 100.0%;">MMSI: 525201568 Lat: -6.111127, Lon: 106.869665 Speed: 0.0 knots Course: 333.4°</div>`)[0];
+                popup_c3b761d621a5638d9c24f470fc2c9730.setContent(html_c344c0df859d9b4e2ba3b4ca447b0438);
+            
+        
+
+        marker_82b240cdb51d269b9c4e3c17a18b5aef.bindPopup(popup_c3b761d621a5638d9c24f470fc2c9730)
+        ;
+
+        
+    
+    
+            var marker_d29caa1e8b6f833adce63362f673146a = L.marker(
+                [-6.102202, 106.882523],
+                {
+}
+            ).addTo(map_3391b0443bfae038bdd963e95774081c);
+        
+    
+            var icon_91bea60f13284cf4063623fa639aa716 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "ship",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+            marker_d29caa1e8b6f833adce63362f673146a.setIcon(icon_91bea60f13284cf4063623fa639aa716);
+        
+    
+        var popup_572e9a2b38779354bd8115b85b94b7d1 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_2a33082002744c26f908b01545cf8251 = $(`<div id="html_2a33082002744c26f908b01545cf8251" style="width: 100.0%; height: 100.0%;">MMSI: 525007115 Lat: -6.102202, Lon: 106.882523 Speed: 0.1 knots Course: 229.9°</div>`)[0];
+                popup_572e9a2b38779354bd8115b85b94b7d1.setContent(html_2a33082002744c26f908b01545cf8251);
+            
+        
+
+        marker_d29caa1e8b6f833adce63362f673146a.bindPopup(popup_572e9a2b38779354bd8115b85b94b7d1)
+        ;
+
+        
+    
+    
+            var marker_cfc7776e2bd75fcd573b05c62124a42d = L.marker(
+                [-6.09131, 106.884102],
+                {
+}
+            ).addTo(map_3391b0443bfae038bdd963e95774081c);
+        
+    
+            var icon_123c596e8e3382f7497d303b586b8f78 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "ship",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+            marker_cfc7776e2bd75fcd573b05c62124a42d.setIcon(icon_123c596e8e3382f7497d303b586b8f78);
+        
+    
+        var popup_03e5ed6b72d41bc6c203eeec5898a722 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_e87861aac972f550327057f315efd1d8 = $(`<div id="html_e87861aac972f550327057f315efd1d8" style="width: 100.0%; height: 100.0%;">MMSI: 477745500 Lat: -6.09131, Lon: 106.884102 Speed: 5.8 knots Course: 318.4°</div>`)[0];
+                popup_03e5ed6b72d41bc6c203eeec5898a722.setContent(html_e87861aac972f550327057f315efd1d8);
+            
+        
+
+        marker_cfc7776e2bd75fcd573b05c62124a42d.bindPopup(popup_03e5ed6b72d41bc6c203eeec5898a722)
+        ;
+
+        
+    
+    
+            var marker_802dd3a3c1db8ec24445a2cd7f82383a = L.marker(
+                [-6.091328, 106.88412],
+                {
+}
+            ).addTo(map_3391b0443bfae038bdd963e95774081c);
+        
+    
+            var icon_125d818ba99f2abb2edab2d0ff41a9a5 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "ship",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+            marker_802dd3a3c1db8ec24445a2cd7f82383a.setIcon(icon_125d818ba99f2abb2edab2d0ff41a9a5);
+        
+    
+        var popup_87ae8641dc89e378ab02c575d7ee81db = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_6c94b529830751d61b69dd1a6ccaaa5b = $(`<div id="html_6c94b529830751d61b69dd1a6ccaaa5b" style="width: 100.0%; height: 100.0%;">MMSI: 477745500 Lat: -6.091328, Lon: 106.88412 Speed: 5.8 knots Course: 318.2°</div>`)[0];
+                popup_87ae8641dc89e378ab02c575d7ee81db.setContent(html_6c94b529830751d61b69dd1a6ccaaa5b);
+            
+        
+
+        marker_802dd3a3c1db8ec24445a2cd7f82383a.bindPopup(popup_87ae8641dc89e378ab02c575d7ee81db)
+        ;
+
+        
+    
+    
+            var marker_5e9b16b0a1a0f1ac9de3d7e8f53e7f0f = L.marker(
+                [-6.09679, 106.879607],
+                {
+}
+            ).addTo(map_3391b0443bfae038bdd963e95774081c);
+        
+    
+            var icon_d4d89bfcb368c60ef7105bcc7323429d = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "ship",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+            marker_5e9b16b0a1a0f1ac9de3d7e8f53e7f0f.setIcon(icon_d4d89bfcb368c60ef7105bcc7323429d);
+        
+    
+        var popup_31411edab75e7097bfef6f617487f44e = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_eb6126e0e3a42f2c40712b445f5edb36 = $(`<div id="html_eb6126e0e3a42f2c40712b445f5edb36" style="width: 100.0%; height: 100.0%;">MMSI: 525018395 Lat: -6.09679, Lon: 106.879607 Speed: 0.3 knots Course: 360.0°</div>`)[0];
+                popup_31411edab75e7097bfef6f617487f44e.setContent(html_eb6126e0e3a42f2c40712b445f5edb36);
+            
+        
+
+        marker_5e9b16b0a1a0f1ac9de3d7e8f53e7f0f.bindPopup(popup_31411edab75e7097bfef6f617487f44e)
+        ;
+
+        
+    
+    
+            var marker_6edc4c65f48b29c695e412c3bdc6db9c = L.marker(
+                [-6.107562, 106.873733],
+                {
+}
+            ).addTo(map_3391b0443bfae038bdd963e95774081c);
+        
+    
+            var icon_8b016a386a0351dde4e26ea7089bb9f0 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "ship",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+            marker_6edc4c65f48b29c695e412c3bdc6db9c.setIcon(icon_8b016a386a0351dde4e26ea7089bb9f0);
+        
+    
+        var popup_f3c0298a3e6487b3b26d1e3a4440373c = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_965d92d9262f8f3096e85d20a2af0e74 = $(`<div id="html_965d92d9262f8f3096e85d20a2af0e74" style="width: 100.0%; height: 100.0%;">MMSI: 525501465 Lat: -6.107562, Lon: 106.873733 Speed: 0.0 knots Course: 316.5°</div>`)[0];
+                popup_f3c0298a3e6487b3b26d1e3a4440373c.setContent(html_965d92d9262f8f3096e85d20a2af0e74);
+            
+        
+
+        marker_6edc4c65f48b29c695e412c3bdc6db9c.bindPopup(popup_f3c0298a3e6487b3b26d1e3a4440373c)
+        ;
+
+        
+    
+    
+            var marker_cb1cb17852dd788d508ef8ce470f9761 = L.marker(
+                [-6.111738, 106.867733],
+                {
+}
+            ).addTo(map_3391b0443bfae038bdd963e95774081c);
+        
+    
+            var icon_55de737f3f496100399cd9d594bb803b = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "ship",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+            marker_cb1cb17852dd788d508ef8ce470f9761.setIcon(icon_55de737f3f496100399cd9d594bb803b);
+        
+    
+        var popup_2ef5fa4acb1161c2d1a64eb9a18d05ca = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_68d4e6592e75dd9fa86c374f5f3116cd = $(`<div id="html_68d4e6592e75dd9fa86c374f5f3116cd" style="width: 100.0%; height: 100.0%;">MMSI: 525301135 Lat: -6.111738, Lon: 106.867733 Speed: 0.0 knots Course: 138.9°</div>`)[0];
+                popup_2ef5fa4acb1161c2d1a64eb9a18d05ca.setContent(html_68d4e6592e75dd9fa86c374f5f3116cd);
+            
+        
+
+        marker_cb1cb17852dd788d508ef8ce470f9761.bindPopup(popup_2ef5fa4acb1161c2d1a64eb9a18d05ca)
+        ;
+
+        
+    
+    
+            var marker_4f9da014cf0cb2b9157cef7c250ff8ee = L.marker(
+                [-6.108527, 106.873553],
+                {
+}
+            ).addTo(map_3391b0443bfae038bdd963e95774081c);
+        
+    
+            var icon_6701cc215d70c03dbae93b9fd437fd40 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "ship",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+            marker_4f9da014cf0cb2b9157cef7c250ff8ee.setIcon(icon_6701cc215d70c03dbae93b9fd437fd40);
+        
+    
+        var popup_1a8e236f5714c084ca2e9a90556c0343 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_ce659929333f40d1dd835cf45a7233de = $(`<div id="html_ce659929333f40d1dd835cf45a7233de" style="width: 100.0%; height: 100.0%;">MMSI: 525900985 Lat: -6.108527, Lon: 106.873553 Speed: 0.0 knots Course: 360.0°</div>`)[0];
+                popup_1a8e236f5714c084ca2e9a90556c0343.setContent(html_ce659929333f40d1dd835cf45a7233de);
+            
+        
+
+        marker_4f9da014cf0cb2b9157cef7c250ff8ee.bindPopup(popup_1a8e236f5714c084ca2e9a90556c0343)
+        ;
+
+        
+    
+    
+            var marker_a4a7d3c3cc26b28d0351d20aef519092 = L.marker(
+                [-6.112258, 106.867295],
+                {
+}
+            ).addTo(map_3391b0443bfae038bdd963e95774081c);
+        
+    
+            var icon_4d2815d0812f2fb264c29a9ef2929137 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "ship",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+            marker_a4a7d3c3cc26b28d0351d20aef519092.setIcon(icon_4d2815d0812f2fb264c29a9ef2929137);
+        
+    
+        var popup_74c012f5f58fcfcdd512e1b879cd768a = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_5a28ad343787a22a85cffb4dd8a6b07c = $(`<div id="html_5a28ad343787a22a85cffb4dd8a6b07c" style="width: 100.0%; height: 100.0%;">MMSI: 372872000 Lat: -6.112258, Lon: 106.867295 Speed: 0.1 knots Course: 0.0°</div>`)[0];
+                popup_74c012f5f58fcfcdd512e1b879cd768a.setContent(html_5a28ad343787a22a85cffb4dd8a6b07c);
+            
+        
+
+        marker_a4a7d3c3cc26b28d0351d20aef519092.bindPopup(popup_74c012f5f58fcfcdd512e1b879cd768a)
+        ;
+
+        
+    
+    
+            var marker_558e7bb11f947a1b7783834b354f7d0e = L.marker(
+                [-6.111748, 106.867557],
+                {
+}
+            ).addTo(map_3391b0443bfae038bdd963e95774081c);
+        
+    
+            var icon_b19dce063faf8ac5089f12584f07e7cc = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "ship",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+            marker_558e7bb11f947a1b7783834b354f7d0e.setIcon(icon_b19dce063faf8ac5089f12584f07e7cc);
+        
+    
+        var popup_87005fafbd35d6dd6cfcfb16b4ade06a = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_a2fefae1658b6a0bb8365195a1efee35 = $(`<div id="html_a2fefae1658b6a0bb8365195a1efee35" style="width: 100.0%; height: 100.0%;">MMSI: 525200856 Lat: -6.111748, Lon: 106.867557 Speed: 0.0 knots Course: 276.5°</div>`)[0];
+                popup_87005fafbd35d6dd6cfcfb16b4ade06a.setContent(html_a2fefae1658b6a0bb8365195a1efee35);
+            
+        
+
+        marker_558e7bb11f947a1b7783834b354f7d0e.bindPopup(popup_87005fafbd35d6dd6cfcfb16b4ade06a)
+        ;
+
+        
+    
+    
+            var marker_67f54d54b49bc197b3f074a5d0ff3060 = L.marker(
+                [-6.106185, 106.883752],
+                {
+}
+            ).addTo(map_3391b0443bfae038bdd963e95774081c);
+        
+    
+            var icon_a109a121d70ea21dcee0b6331a286277 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "ship",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+            marker_67f54d54b49bc197b3f074a5d0ff3060.setIcon(icon_a109a121d70ea21dcee0b6331a286277);
+        
+    
+        var popup_79ac017d615f91742abb24fcc9f644d3 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_37a6d003041e410eee9cfb9933ebd0f9 = $(`<div id="html_37a6d003041e410eee9cfb9933ebd0f9" style="width: 100.0%; height: 100.0%;">MMSI: 525006345 Lat: -6.106185, Lon: 106.883752 Speed: 0.1 knots Course: 242.1°</div>`)[0];
+                popup_79ac017d615f91742abb24fcc9f644d3.setContent(html_37a6d003041e410eee9cfb9933ebd0f9);
+            
+        
+
+        marker_67f54d54b49bc197b3f074a5d0ff3060.bindPopup(popup_79ac017d615f91742abb24fcc9f644d3)
+        ;
+
+        
+    
+</script>
+</html>

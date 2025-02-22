@@ -14,8 +14,15 @@ from map_viewer import generate_map
 class AISViewer:
     def __init__(self, root):
         self.root = root
+        high = 600
+        width = 1200
+        screenWidth = root.winfo_screenwidth()
+        screenHeight = root.winfo_screenheight()
+        centerX = int((screenWidth/2) - (width/2))
+        centerY = int((screenHeight/2) - (high/2))
+        self.root.minsize(width, high)
         self.root.title("AIS Data Viewer")
-        self.root.geometry("1200x600")
+        self.root.geometry(f"{width}x{high}+{centerX}+{centerY}")
 
         self.tree = ttk.Treeview(root,
                                  columns=("ID", "MMSI", "Lat", "Lon", "Speed", "Course", "Ship Type", "Received At"),
