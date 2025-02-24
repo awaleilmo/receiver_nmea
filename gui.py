@@ -8,7 +8,7 @@ from PyQt6.uic import loadUi
 from PyQt6.QtCore import QFile
 
 from config import DB_NAME, ALLOWED_MMSI
-from database import create_table
+from constollers import get_all_ais_data
 import receiver
 import sender
 from map_viewer import generate_map
@@ -47,9 +47,6 @@ class AISViewer(QMainWindow):
         self.running_receiver = False
         self.running_sender = False
 
-        # Inisialisasi database
-        create_table()
-
         # Muat data awal
         self.load_data()
 
@@ -60,16 +57,21 @@ class AISViewer(QMainWindow):
             ["ID", "MMSI", "Latitude", "Longitude", "Speed (knots)", "Course (°)", "Ship Type", "Received At"]
         )
 
-        connection = sqlite3.connect(DB_NAME)
-        cursor = connection.cursor()
-        cursor.execute(
-            "SELECT id, mmsi, lat, lon, sog, cog, ship_type, received_at FROM ais_history ORDER BY id DESC LIMIT 20")
-        rows = cursor.fetchall()
-        connection.close()
+        rows = get_all_ais_data()
 
         # Tambahkan data ke model
         for row in rows:
-            items = [QStandardItem(str(item)) for item in row]
+            items = [
+                QStandardItem(str(row["id"])),
+                QStandardItem(str(row["mmsi"])),
+                QStandardItem(str(row["lat"])),
+                QStandardItem(str(row["lon"])),
+                QStandardItem(str(row["sog"])),
+                QStandardItem(str(row["cog"])),
+                QStandardItem(str(row["ship_type"])),
+                QStandardItem(str(row["received_at"]))
+            ]
+
             self.model.appendRow(items)
 
         # Atur model ke QTableView

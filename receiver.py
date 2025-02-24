@@ -1,8 +1,6 @@
 import socket
 import json
-from pyais import decode
-from database import save_to_database
-from constollers import save_ais_data
+from constollers import save_ais_data, save_nmea_data
 from config import  HOST, PORT
 
 ais_buffer = {}
@@ -74,7 +72,7 @@ def receive_nmea_tcp():
                 nmea_lines = data.strip().split("\n")
                 for line in nmea_lines:
                     print(f"Menerima: {line}")
-                    save_to_database(line)
+                    save_nmea_data(line)
             except Exception as e:
                 print(f"Terjadi kesalahan: {e}")
                 break
@@ -94,7 +92,7 @@ def receive_nmea_udp():
                 nmea_data = data.decode("utf-8").strip()
                 print(f"Diterima dari {addr}: {nmea_data}")
 
-                save_to_database(nmea_data)
+                save_nmea_data(nmea_data)
 
                 # Simpan history berdasarkan MMSI
                 mmsi, lat, lon, sog, cog, ship_type = process_ais_message(nmea_data)
@@ -107,6 +105,3 @@ def receive_nmea_udp():
 def stop_nmea_receiver():
     global running_receiver
     running_receiver = False
-
-if __name__ == "__main__":
-    receive_nmea_udp()

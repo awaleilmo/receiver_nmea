@@ -4,18 +4,19 @@ import webbrowser
 import time
 import os
 from config import DB_NAME
+from constollers import get_all_ais_data
 
 
 def get_latest_ship_positions():
-    conn = sqlite3.connect(DB_NAME)
-    cursor = conn.cursor()
-    cursor.execute("SELECT mmsi, lat, lon, sog, cog FROM ais_history ORDER BY received_at DESC LIMIT 20")
-    rows = cursor.fetchall()
-    conn.close()
+    rows = get_all_ais_data()
 
     ship_positions = []
     for row in rows:
-        mmsi, lat, lon, sog, cog = row
+        mmsi = row["mmsi"]
+        lat = row["lat"]
+        lon = row["lon"]
+        sog = row["sog"]
+        cog = row["cog"]
         if lat and lon:
             ship_positions.append((mmsi, lat, lon, sog, cog))
 

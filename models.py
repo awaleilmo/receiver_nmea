@@ -17,3 +17,11 @@ class AISHistory(Base):
     cog = Column(Float, nullable=False)
     ship_type = Column(String, nullable=False)
     received_at = Column(DateTime, default=datetime.datetime.utcnow())
+
+class NMEA(Base):
+    __tablename__ = "nmea"
+
+    id = Column(Integer, primary_key=True)
+    nmea = Column(String, nullable=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow())
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow())

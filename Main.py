@@ -1,13 +1,10 @@
 import threading
 from receiver import receive_nmea_udp
 from sender import send_ais_data
-from database import create_table
 import time
 
 
 if __name__ == "__main__":
-    print("🔄 Membuat tabel database...")
-    create_table()  # Pastikan tabel database dibuat
 
     # Jalankan penerima data NMEA (UDP) di thread terpisah
     thread_receive = threading.Thread(target=receive_nmea_udp, daemon=True)
