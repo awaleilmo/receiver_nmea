@@ -53,7 +53,7 @@
         <widget class="QPushButton" name="btn_start_sender">
          <property name="maximumSize">
           <size>
-           <width>150</width>
+           <width>160</width>
            <height>16777215</height>
           </size>
          </property>
@@ -63,7 +63,7 @@
           </font>
          </property>
          <property name="text">
-          <string>Start Sender</string>
+          <string>Start Sender OpenCPN</string>
          </property>
         </widget>
        </item>

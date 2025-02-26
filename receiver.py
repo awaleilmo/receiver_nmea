@@ -1,5 +1,7 @@
 import socket
 import json
+import time
+import requests
 
 from setuptools.package_index import socket_timeout
 
@@ -7,6 +9,8 @@ from constollers import save_ais_data, save_nmea_data
 from config import  HOST, PORT
 
 ais_buffer = {}
+
+LARAVEL_API_URL = "http://localhost:8000/api/ais/store"
 
 def process_ais_message(nmea_sentence):
     """Mengelola pesan AIS multi-fragment sebelum didecode."""
@@ -48,6 +52,12 @@ def extract_ais_data(nmea_sentence):
         decoded = decode(nmea_sentence)
         decoded_json = decoded.to_json()  # Konversi ke string JSON
         decoded_dict = json.loads(decoded_json)  # Parse ke dictionary
+        print(decoded_dict)
+        send_to_api = requests.post(LARAVEL_API_URL, json=decoded_dict)
+        if send_to_api.status_code == 200 or send_to_api.status_code == 201:
+            print(f"Berhasil mengirim data ke Laravel API: {send_to_api.text}")
+        else:
+            print(f"Gagal mengirim data ke Laravel API: {send_to_api.text}")
 
         mmsi = decoded_dict.get("mmsi")
         lat = decoded_dict.get("lat")
