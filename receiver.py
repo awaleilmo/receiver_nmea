@@ -52,7 +52,6 @@ def extract_ais_data(nmea_sentence):
         decoded = decode(nmea_sentence)
         decoded_json = decoded.to_json()  # Konversi ke string JSON
         decoded_dict = json.loads(decoded_json)  # Parse ke dictionary
-        print(decoded_dict)
         send_to_api = requests.post(LARAVEL_API_URL, json=decoded_dict)
         if send_to_api.status_code == 200 or send_to_api.status_code == 201:
             print(f"Berhasil mengirim data ke Laravel API: {send_to_api.text}")
