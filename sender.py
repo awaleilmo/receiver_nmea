@@ -17,13 +17,13 @@ def extract_mmsi(nmea_sentence):
     return None
 
 
-def send_ais_data():
+def send_ais_data(stop_event):
     """Mengirim data AIS ke OpenCPN secara real-time."""
-    global running_sender
-    running_sender = True
+    udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
-        while running_sender:
+    print("Sender started...")
+    try:
+        while not stop_event.is_set():
             ais_data = get_ais_latest()
             for nmea_sentence in ais_data:
                 mmsi = extract_mmsi(nmea_sentence)
@@ -32,8 +32,10 @@ def send_ais_data():
                     print(f"Mengirim ke OpenCPN: {nmea_sentence}")
             time.sleep(2)  # Tunggu sebelum mengirim ulang
 
+    except Exception as e:
+        print(f"Sender error: {e}")
 
-def stop_ais_sender():
-    global running_sender
-    running_sender = False
+    finally:
+        udp_socket.close()  # Pastikan socket ditutup saat berhenti
+        print("Sender stopped.")
 

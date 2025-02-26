@@ -5,7 +5,7 @@ import webview
 from PyQt6.QtGui import QStandardItemModel, QStandardItem
 from PyQt6.QtWidgets import QApplication, QMainWindow, QTableView, QPushButton, QLineEdit
 from PyQt6.uic import loadUi
-from PyQt6.QtCore import QFile
+from PyQt6.QtCore import QFile, QThread, pyqtSignal
 
 from config import DB_NAME, ALLOWED_MMSI
 from constollers import get_all_ais_data
@@ -17,6 +17,10 @@ from map_viewer import generate_map
 class AISViewer(QMainWindow):
     def __init__(self):
         super().__init__()
+        self.toggleReceiver = False
+        self.toggleSender = False
+        self.stop_receiver_event = threading.Event()
+        self.stop_sender_event = threading.Event()
 
         # Muat file .ui menggunakan loadUi dari PyQt6
         loadUi("main.ui", self)
@@ -30,13 +34,9 @@ class AISViewer(QMainWindow):
         # Hubungkan tombol "Buka Peta" ke fungsi show_map
         self.btn_open_map.clicked.connect(self.show_map)
 
-        # Hubungkan tombol kontrol untuk Start/Stop Receiver
-        self.btn_start_receiver.clicked.connect(self.start_receiver)
-        self.btn_stop_receiver.clicked.connect(self.stop_receiver)
-
-        # Hubungkan tombol kontrol untuk Start/Stop Sender
-        self.btn_start_sender.clicked.connect(self.start_sender)
-        self.btn_stop_sender.clicked.connect(self.stop_sender)
+        # Gunakan satu fungsi untuk menangani start/stop
+        self.btn_start_receiver.clicked.connect(self.toggle_receiver_function)
+        self.btn_start_sender.clicked.connect(self.toggle_sender_function)
 
         # Hubungkan tombol "Exit" ke fungsi exit
         self.actionExit.triggered.connect(self.exit)
@@ -44,8 +44,6 @@ class AISViewer(QMainWindow):
         # Status Threads
         self.receiver_thread = None
         self.sender_thread = None
-        self.running_receiver = False
-        self.running_sender = False
 
         # Muat data awal
         self.load_data()
@@ -77,34 +75,62 @@ class AISViewer(QMainWindow):
         # Atur model ke QTableView
         self.tableView.setModel(self.model)
 
+    def toggle_receiver_function(self):
+        """Toggle fungsi start/stop receiver"""
+        if not self.toggleReceiver:
+            self.start_receiver()
+        else:
+            self.stop_receiver()
+
     def start_receiver(self):
         """Menjalankan penerima AIS di thread terpisah"""
-        if not self.running_receiver:
-            self.receiver_thread = threading.Thread(target=receiver.receive_nmea_udp, daemon=True)
+        if self.receiver_thread is None or not self.receiver_thread.is_alive():
+            self.stop_receiver_event.clear()
+            self.btn_start_receiver.setText("Stop Receiver")
+            self.receiver_thread = threading.Thread(target=self.run_receiver, daemon=True)
             self.receiver_thread.start()
-            self.running_receiver = True
+            self.toggleReceiver = True
             print("Receiver Started")
+
+    def run_receiver(self):
+        """Fungsi wrapper untuk menjalankan receiver dengan event stop"""
+        receiver.receive_nmea_udp(self.stop_receiver_event)
 
     def stop_receiver(self):
         """Menghentikan penerima AIS"""
-        if self.running_receiver:
-            receiver.stop_nmea_receiver()
-            self.running_receiver = False
+        if self.receiver_thread and self.receiver_thread.is_alive():
+            self.stop_receiver_event.set()  # Kirim sinyal untuk berhenti
+            self.btn_start_receiver.setText("Start Receiver")
+            self.toggleReceiver = False
             print("Receiver Stopped")
+
+    def toggle_sender_function(self):
+        """Toggle fungsi start/stop sender"""
+        if not self.toggleSender:
+            self.start_sender()
+        else:
+            self.stop_sender()
 
     def start_sender(self):
         """Menjalankan pengiriman AIS ke OpenCPN di thread terpisah"""
-        if not self.running_sender:
-            self.sender_thread = threading.Thread(target=sender.send_ais_data, daemon=True)
+        if self.sender_thread is None or not self.sender_thread.is_alive():
+            self.stop_sender_event.clear()
+            self.btn_start_sender.setText("Stop Sender")
+            self.sender_thread = threading.Thread(target=self.run_sender, daemon=True)
             self.sender_thread.start()
-            self.running_sender = True
+            self.toggleSender = True
             print("Sender Started")
+
+    def run_sender(self):
+        """Fungsi wrapper untuk menjalankan sender dengan event stop"""
+        sender.send_ais_data(self.stop_sender_event)
 
     def stop_sender(self):
         """Menghentikan pengiriman AIS ke OpenCPN"""
-        if self.running_sender:
-            sender.stop_ais_sender()
-            self.running_sender = False
+        if self.sender_thread and self.sender_thread.is_alive():
+            self.stop_sender_event.set()  # Kirim sinyal untuk berhenti
+            self.btn_start_sender.setText("Start Sender")
+            self.toggleSender = False
             print("Sender Stopped")
 
     def show_map(self):

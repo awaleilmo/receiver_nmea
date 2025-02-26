@@ -1,5 +1,8 @@
 import socket
 import json
+
+from setuptools.package_index import socket_timeout
+
 from constollers import save_ais_data, save_nmea_data
 from config import  HOST, PORT
 
@@ -41,6 +44,7 @@ def process_ais_message(nmea_sentence):
 def extract_ais_data(nmea_sentence):
     """Decode data AIS menggunakan pyais."""
     try:
+        from pyais import decode
         decoded = decode(nmea_sentence)
         decoded_json = decoded.to_json()  # Konversi ke string JSON
         decoded_dict = json.loads(decoded_json)  # Parse ke dictionary
@@ -77,16 +81,19 @@ def receive_nmea_tcp():
                 print(f"Terjadi kesalahan: {e}")
                 break
 
-def receive_nmea_udp():
+def receive_nmea_udp(stop_event):
     """Menerima data NMEA dari koneksi UDP."""
-    global running_receiver
-    running_receiver = True
+    # global running_receiver
+    # running_receiver = True
 
-    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
-        sock.bind((HOST, PORT))
-        print(f"Menunggu data NMEA di {HOST}:{PORT}...\nTekan Ctrl+C untuk menghentikan.")
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # Agar bisa di-restart tanpa error
+    sock.bind((HOST, PORT))
+    print(f"Menunggu data NMEA di {HOST}:{PORT}...\nTekan Ctrl+C untuk menghentikan.")
 
-        while running_receiver:
+    try:
+        while not stop_event.is_set():
+            sock.settimeout(1.0)
             try:
                 data, addr = sock.recvfrom(1024)
                 nmea_data = data.decode("utf-8").strip()
@@ -98,9 +105,14 @@ def receive_nmea_udp():
                 mmsi, lat, lon, sog, cog, ship_type = process_ais_message(nmea_data)
                 if mmsi:
                     save_ais_data(mmsi, lat, lon, sog, cog, ship_type)
-            except Exception as e:
-                print(f"Terjadi kesalahan: {e}")
-                break
+            except socket_timeout:
+                continue
+    except Exception as e:
+        print(f"Receiver error: {e}")
+
+    finally:
+        sock.close()  # Tutup socket saat berhenti
+        print("Receiver stopped.")
 
 def stop_nmea_receiver():
     global running_receiver

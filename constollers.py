@@ -71,7 +71,8 @@ def save_nmea_data(nmea_data):
     """
     with Session() as session:
         try:
-            timestamp = datetime.datetime.now().isoformat()
+            timestamp = datetime.datetime.now()
+            timestamp_str = timestamp.isoformat()
             nmea = NMEA(nmea=nmea_data, created_at=timestamp, updated_at=timestamp)
             session.add(nmea)
             session.commit()

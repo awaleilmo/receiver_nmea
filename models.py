@@ -10,12 +10,12 @@ class AISHistory(Base):
     __tablename__ = "ais_history"
 
     id = Column(Integer, primary_key=True)
-    mmsi = Column(String, nullable=False)
-    lat = Column(Float, nullable=False)
-    lon = Column(Float, nullable=False)
-    sog = Column(Float, nullable=False)
-    cog = Column(Float, nullable=False)
-    ship_type = Column(String, nullable=False)
+    mmsi = Column(String, nullable=True)
+    lat = Column(Float, nullable=True)
+    lon = Column(Float, nullable=True)
+    sog = Column(Float, nullable=True)
+    cog = Column(Float, nullable=True)
+    ship_type = Column(String, nullable=True)
     received_at = Column(DateTime, default=datetime.datetime.utcnow())
 
 class NMEA(Base):
