@@ -1,20 +1,16 @@
-import threading
-from receiver import receive_nmea_udp
-from sender import send_ais_data
-import time
+import sys
+from PyQt6.QtGui import QIcon
+from PyQt6.QtWidgets import QApplication
+
+from Pages.Main_page import AISViewer
 
 
 if __name__ == "__main__":
-
-    # Jalankan penerima data NMEA (UDP) di thread terpisah
-    thread_receive = threading.Thread(target=receive_nmea_udp, daemon=True)
-    thread_receive.start()
-
-    # Jalankan pengiriman data AIS ke OpenCPN di thread terpisah
-    thread_send = threading.Thread(target=send_ais_data, daemon=True)
-    thread_send.start()
-
-    # Kirim data AIS ke OpenCPN setiap 10 detik
-    while True:
-        send_ais_data()
-        time.sleep(1)
+    app = QApplication(sys.argv)
+    QApplication.setOrganizationName("Integra Corp")
+    QApplication.setApplicationName("NMEA Receiver IPM")
+    QApplication.setApplicationDisplayName("NMEA Receiver IPM")
+    QApplication.setWindowIcon(QIcon("Assets/logo_ipm.png"))
+    window = AISViewer()
+    window.show()
+    sys.exit(app.exec())

@@ -3,8 +3,7 @@ import folium
 import webbrowser
 import time
 import os
-from config import DB_NAME
-from constollers import get_all_ais_data
+from Controllers.AISHistory_controller import get_all_ais_data
 
 
 def get_latest_ship_positions():

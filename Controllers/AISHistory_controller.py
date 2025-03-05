@@ -1,17 +1,18 @@
 from sqlalchemy.orm import sessionmaker
-from models import AISHistory, engine, NMEA
+from Models.__init__ import engine
+from Models.AISHistory_model import AISHistory
 import datetime
 
 # Buat session factory
 Session = sessionmaker(bind=engine)
 
-def save_ais_data(mmsi, lat, lon, sog, cog, ship_type):
+def save_ais_data(nmea, mmsi, lat, lon, sog, cog, ship_type):
     """
     Menyimpan data AIS ke database.
     """
     with Session() as session:
         try:
-            ais_data = AISHistory(mmsi=mmsi, lat=lat, lon=lon, sog=sog, cog=cog, ship_type=ship_type)
+            ais_data = AISHistory(nmea=nmea, mmsi=mmsi, lat=lat, lon=lon, sog=sog, cog=cog, ship_type=ship_type)
             session.add(ais_data)
             session.commit()
         except Exception as e:
@@ -40,10 +41,8 @@ def delete_old_records():
             raise e
 
 def get_all_ais_data():
-    """
-    Mengambil semua data AIS terbaru (20 record terakhir).
-    """
-    with Session() as session:
+    session = Session()  # Buat session instance
+    try:
         ais_data = session.query(AISHistory).order_by(AISHistory.received_at.desc()).limit(20).all()
         return [{
             "id": ship.id,
@@ -55,27 +54,16 @@ def get_all_ais_data():
             "ship_type": ship.ship_type,
             "received_at": ship.received_at.isoformat() if ship.received_at else None
         } for ship in ais_data]
+    except Exception as e:
+        print(f"Error: {e}")
+    finally:
+        session.close()
 
 def get_ais_latest():
     """
     Mengambil 10 data NMEA terbaru.
     """
     with Session() as session:
-        query = session.query(NMEA.nmea).order_by(NMEA.created_at.desc()).limit(10)
+        query = session.query(AISHistory.nmea).order_by(AISHistory.received_at.desc()).limit(10)
         result = session.execute(query).fetchall()
         return [row[0] for row in result]
-
-def save_nmea_data(nmea_data):
-    """
-    Menyimpan data NMEA ke database.
-    """
-    with Session() as session:
-        try:
-            timestamp = datetime.datetime.now()
-            timestamp_str = timestamp.isoformat()
-            nmea = NMEA(nmea=nmea_data, created_at=timestamp, updated_at=timestamp)
-            session.add(nmea)
-            session.commit()
-        except Exception as e:
-            session.rollback()
-            raise e
