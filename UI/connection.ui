@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>DConnection</class>
+ <widget class="QDialog" name="DConnection">
+  <property name="windowModality">
+   <enum>Qt::WindowModality::NonModal</enum>
+  </property>
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>665</width>
+    <height>480</height>
+   </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>655</width>
+    <height>480</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>1063</width>
+    <height>480</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>Data Connection</string>
+  </property>
+  <widget class="QDialogButtonBox" name="buttonBox">
+   <property name="geometry">
+    <rect>
+     <x>9</x>
+     <y>451</y>
+     <width>650</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="orientation">
+    <enum>Qt::Orientation::Horizontal</enum>
+   </property>
+   <property name="standardButtons">
+    <set>QDialogButtonBox::StandardButton::Apply|QDialogButtonBox::StandardButton::Cancel|QDialogButtonBox::StandardButton::Ok</set>
+   </property>
+   <property name="centerButtons">
+    <bool>false</bool>
+   </property>
+  </widget>
+  <widget class="QFrame" name="frame">
+   <property name="geometry">
+    <rect>
+     <x>9</x>
+     <y>9</y>
+     <width>650</width>
+     <height>44</height>
+    </rect>
+   </property>
+   <property name="minimumSize">
+    <size>
+     <width>650</width>
+     <height>44</height>
+    </size>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::Shape::StyledPanel</enum>
+   </property>
+   <property name="frameShadow">
+    <enum>QFrame::Shadow::Raised</enum>
+   </property>
+   <property name="midLineWidth">
+    <number>0</number>
+   </property>
+   <widget class="QPushButton" name="add_button">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>10</y>
+      <width>150</width>
+      <height>24</height>
+     </rect>
+    </property>
+    <property name="minimumSize">
+     <size>
+      <width>150</width>
+      <height>0</height>
+     </size>
+    </property>
+    <property name="maximumSize">
+     <size>
+      <width>200</width>
+      <height>16777215</height>
+     </size>
+    </property>
+    <property name="text">
+     <string>Add Connection</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="edit_button">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>180</x>
+      <y>10</y>
+      <width>150</width>
+      <height>24</height>
+     </rect>
+    </property>
+    <property name="minimumSize">
+     <size>
+      <width>150</width>
+      <height>0</height>
+     </size>
+    </property>
+    <property name="maximumSize">
+     <size>
+      <width>200</width>
+      <height>16777215</height>
+     </size>
+    </property>
+    <property name="text">
+     <string>Edit Connection</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="remove_button">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>350</x>
+      <y>10</y>
+      <width>150</width>
+      <height>24</height>
+     </rect>
+    </property>
+    <property name="minimumSize">
+     <size>
+      <width>150</width>
+      <height>0</height>
+     </size>
+    </property>
+    <property name="maximumSize">
+     <size>
+      <width>200</width>
+      <height>16777215</height>
+     </size>
+    </property>
+    <property name="text">
+     <string>Remove Connection</string>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QFrame" name="frame_2">
+   <property name="geometry">
+    <rect>
+     <x>9</x>
+     <y>54</y>
+     <width>650</width>
+     <height>391</height>
+    </rect>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::Shape::StyledPanel</enum>
+   </property>
+   <property name="frameShadow">
+    <enum>QFrame::Shadow::Raised</enum>
+   </property>
+   <widget class="QScrollArea" name="scrollArea">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>0</y>
+      <width>650</width>
+      <height>391</height>
+     </rect>
+    </property>
+    <property name="widgetResizable">
+     <bool>true</bool>
+    </property>
+    <widget class="QWidget" name="scrollAreaWidgetContents">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>648</width>
+       <height>389</height>
+      </rect>
+     </property>
+    </widget>
+   </widget>
+  </widget>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>DConnection</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>248</x>
+     <y>254</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>157</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>DConnection</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>316</x>
+     <y>260</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>286</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1048</width>
-    <height>529</height>
+    <height>528</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -126,6 +126,7 @@
      <string>Options</string>
     </property>
     <addaction name="actionConfigure"/>
+    <addaction name="actionConnections"/>
    </widget>
    <widget class="QMenu" name="menuRun">
     <property name="title">
@@ -148,7 +149,7 @@
     <string>Exit</string>
    </property>
    <property name="iconVisibleInMenu">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
    <property name="shortcutVisibleInContextMenu">
     <bool>false</bool>
@@ -210,6 +211,11 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Shift+T</string>
+   </property>
+  </action>
+  <action name="actionConnections">
+   <property name="text">
+    <string>Connections</string>
    </property>
   </action>
  </widget>

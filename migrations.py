@@ -20,7 +20,7 @@ def seeder_config():
 def seeder_connection():
     Session = sessionmaker(bind=engine)
     session = Session()
-    seederConnection = ConnectionModel(name="Test", type="network", data_port="", baudrate="", protocol="nmea0183", network="udp", address="127.0.0.1", port="10110")
+    seederConnection = ConnectionModel(name="Test", type="network", data_port="", baudrate="", protocol="nmea0183", network="udp", address="127.0.0.1", port="10110", active=1)
     session.add(seederConnection)
     session.commit()
     session.close()

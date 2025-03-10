@@ -8,6 +8,7 @@ from PyQt6.uic import loadUi
 from Controllers.AISHistory_controller import get_all_ais_data
 from Services import sender, receiver
 from Pages.Config_page import ConfigureWindow
+from Pages.Connection_page import ConnectionWindow
 
 
 # from map_viewer import generate_map
@@ -73,6 +74,7 @@ class AISViewer(QMainWindow):
         # Hubungkan tombol "Exit" ke fungsi exit
         self.actionExit.triggered.connect(self.exit)
         self.actionConfigure.triggered.connect(self.showConfigure)
+        self.actionConnections.triggered.connect(self.showConnection)
         self.actionRun_Receiver.triggered.connect(self.start_receiver)
         self.actionStop_Receiver.triggered.connect(self.stop_receiver)
         self.actionRun_Sender_OpenCPN.triggered.connect(self.start_sender)
@@ -117,32 +119,34 @@ class AISViewer(QMainWindow):
         # Atur model ke QTableView
         self.tableView.setModel(self.model)
 
-    def toggle_receiver_function(self):
-        """Toggle fungsi start/stop receiver"""
-        if not self.toggleReceiver:
-            self.start_receiver()
-        else:
-            self.stop_receiver()
+    def run_receiver_thread(self):
+        """Wrapper untuk menjalankan receiver di thread"""
+        self.receiver_threads = receiver.start_multi_receiver(self.stop_receiver_event)
 
     def start_receiver(self):
         """Menjalankan penerima AIS di thread terpisah"""
         if not self.receiver_threads:
             self.stop_receiver_event.clear()
-            self.receiver_threads = receiver.start_multi_receiver(self.stop_receiver_event)  # Menyimpan daftar thread
-            self.actionRun_Receiver.setEnabled(False)
-            self.actionStop_Receiver.setEnabled(True)
-            self.run_receiver_action.setEnabled(False)
-            self.stop_receiver_action.setEnabled(True)
-            self.toggleReceiver = True
-            self.ReceiverLabel.setText("Receiver: Running")
-            self.statusbar.showMessage('Receiver Started', 5000)
+            receiver_thread = threading.Thread(target=self.run_receiver_thread, daemon=True)
+            receiver_thread.start()
+            self.receiver_threads = receiver.start_multi_receiver(receiver_thread)
+            if self.receiver_threads:
+                self.actionRun_Receiver.setEnabled(False)
+                self.actionStop_Receiver.setEnabled(True)
+                self.run_receiver_action.setEnabled(False)
+                self.stop_receiver_action.setEnabled(True)
+                self.toggleReceiver = True
+                self.ReceiverLabel.setText("Receiver: Running")
+                self.statusbar.showMessage('Receiver Started', 5000)
+            else:
+                self.statusbar.showMessage('⚠️ Tidak ada koneksi aktif. Receiver tidak berjalan.', 5000)
 
     def stop_receiver(self):
         """Menghentikan penerima AIS"""
         if self.receiver_threads:
             self.stop_receiver_event.set()  # Kirim sinyal untuk berhenti
             for thread in self.receiver_threads:
-                thread.join()  # Tunggu semua thread selesai
+                thread.join(timeout=5)  # Tunggu semua thread selesai
 
             self.receiver_threads = []  # Kosongkan daftar thread
             self.actionRun_Receiver.setEnabled(True)
@@ -223,4 +227,9 @@ class AISViewer(QMainWindow):
     def showConfigure(self):
         """Menampilkan jendela konfigurasi"""
         dlg = ConfigureWindow(self)
+        dlg.exec()
+
+    def showConnection(self):
+        """Menampilkan jendela koneksi"""
+        dlg = ConnectionWindow(self)
         dlg.exec()

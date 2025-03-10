@@ -4,6 +4,7 @@ import time
 import requests
 import threading
 
+import serial
 from setuptools.package_index import socket_timeout
 
 from Controllers.AISHistory_controller import save_ais_data
@@ -130,13 +131,58 @@ def receive_nmea_udp(host, port, stop_event):
         finally:
             print("Receiver stopped.")
 
+def receive_nmea_serial(port, baudrate, stop_event):
+    """Menerima data NMEA AIS dari port serial (COM)."""
+    ser = None  # Pastikan ser dideklarasikan sebelum try
+
+    while not stop_event.is_set():
+        try:
+            ser = serial.Serial(port=port, baudrate=baudrate, timeout=0.5, exclusive=True)
+            print(f"Menunggu data NMEA dari {port}...")
+
+            while not stop_event.is_set():  # Perbaikan: Pakai ()
+                if ser.in_waiting > 0:
+                    nmea_data = ser.read(ser.in_waiting).decode('utf-8', errors='ignore').strip()
+                    if nmea_data:
+                        print(f"Diterima dari {port}: {nmea_data}")
+
+                        # Proses data AIS hanya jika valid
+                        mmsi, lat, lon, sog, cog, ship_type = process_ais_message(nmea_data)
+                        if mmsi:
+                            save_ais_data(nmea_data, mmsi, lat, lon, sog, cog, ship_type)
+                time.sleep(0.1)
+        except serial.SerialException as e:  # Menangani error jika port tidak bisa dibuka
+            print(f"Gagal bind ke {port} {baudrate}, mencoba lagi dalam 10 detik... Error: {e}")
+            time.sleep(10)
+
+        except Exception as e:  # Tangani error umum lainnya
+            print(f"Error umum di receive_nmea_serial: {e}")
+
+        finally:
+            if ser is not None:  # Perbaikan: Cek apakah ser sudah dibuat sebelum ditutup
+                try:
+                    if ser.is_open:
+                        ser.close()  # Tutup serial sebelum reconnect
+                        print(f"Port {port} ditutup.")
+                except Exception as e:
+                    print(f"Error saat menutup serial {port}: {e}")
+
+    print("Receiver serial stopped.")
+
+
+
 def start_multi_receiver(stop_event):
     try:
         data = get_connection()
         threads = []
+        has_active_connection = False
 
         for dataset in data:
             try:
+                if dataset.get('active') == 0:
+                    continue
+
+                has_active_connection = True
                 print(f"Memproses dataset: {dataset}")  # Debugging, pastikan data benar
 
                 if dataset.get('type') == 'network':
@@ -154,16 +200,37 @@ def start_multi_receiver(stop_event):
                         thread = threading.Thread(target=receive_nmea_udp, args=(address, int(port), stop_event))
 
                     elif protocol == 'tcp':
-                        thread = threading.Thread(target=receive_nmea_tcp, args=(address, port, stop_event))
+                        thread = threading.Thread(target=receive_nmea_tcp, args=(address, int(port), stop_event))
 
                     if thread:
                         thread.start()
                         threads.append(thread)
                         time.sleep(0.1)  # Hindari CPU overload
+                elif dataset.get('type') == 'serial':
+
+                    data_port = dataset.get('data_port')
+                    baudrate = dataset.get('baudrate')
+
+                    if not data_port or not baudrate:
+                        print(f"Konfigurasi tidak valid: {dataset}")
+                        continue
+
+                    thread = threading.Thread(target=receive_nmea_serial, args=(data_port, int(baudrate), stop_event))
+                    if thread:
+                        thread.start()
+                        threads.append(thread)
+                        time.sleep(1)
+                else:
+                    print(f"Jenis dataset tidak valid: {dataset}")
 
             except Exception as e:
                 print(f"Error saat memproses dataset {dataset}: {e}")
 
+        if not has_active_connection:
+            print("⚠️ Tidak ada koneksi aktif! Menunggu stop_event...")
+            while not stop_event.is_set():
+                time.sleep(1)  # Biarkan berjalan agar bisa dihentikan
+            print("Receiver dihentikan.")
         return threads
 
     except Exception as e:

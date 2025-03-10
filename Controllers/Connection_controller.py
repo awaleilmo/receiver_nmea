@@ -4,10 +4,10 @@ from Models.Connection_model import ConnectionModel
 import datetime
 
 Session = sessionmaker(bind=engine)
-def save_connection(name, type, data_port, baudrate, protocol, network, address, port):
+def save_connection(name, type, data_port, baudrate, protocol, network, address, port, active):
     session = Session()
     try:
-        res = ConnectionModel(name=name, type=type, data_port=data_port, baudrate=baudrate, protocol=protocol, network=network, address=address, port=port)
+        res = ConnectionModel(name=name, type=type, data_port=data_port, baudrate=baudrate, protocol=protocol, network=network, address=address, port=port, active=active)
         session.add(res)
         session.commit()
     except Exception as e:
@@ -17,7 +17,7 @@ def save_connection(name, type, data_port, baudrate, protocol, network, address,
     finally:
         session.close()
 
-def update_connection(id, name, type, data_port, baudrate, protocol, network, address, port):
+def update_connection(id, name, type, data_port, baudrate, protocol, network, address, port, active):
     session = Session()
     try:
         res = session.query(ConnectionModel).filter_by(id=id).first()
@@ -29,6 +29,7 @@ def update_connection(id, name, type, data_port, baudrate, protocol, network, ad
         res.network = network
         res.address = address
         res.port = port
+        res.active = active
         session.commit()
     except Exception as e:
         session.rollback()
@@ -50,8 +51,22 @@ def get_connection():
             "protocol": con.protocol,
             "network": con.network,
             "address": con.address,
-            "port": con.port
+            "port": con.port,
+            "active": con.active
         } for con in res]
+    except Exception as e:
+        session.rollback()
+        print(f"Error: {e}")
+        raise e
+    finally:
+        session.close()
+
+def update_connection_status(id, active):
+    session = Session()
+    try:
+        res = session.query(ConnectionModel).filter_by(id=id).first()
+        res.active = active
+        session.commit()
     except Exception as e:
         session.rollback()
         print(f"Error: {e}")

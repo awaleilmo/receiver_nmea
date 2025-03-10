@@ -16,5 +16,6 @@ class ConnectionModel(Base):
     network = Column(String, nullable=True)
     address = Column(String, nullable=True)
     port = Column(String, nullable=True)
+    active = Column(Integer, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow())
     updated_at = Column(DateTime, default=datetime.datetime.utcnow())
