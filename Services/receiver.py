@@ -5,6 +5,7 @@ import requests
 import threading
 
 import serial
+import ais.stream
 
 from Controllers.AISHistory_controller import save_ais_data
 from Controllers.Configure_controller import get_config
@@ -46,6 +47,13 @@ def process_ais_message(nmea_sentence):
     except Exception as e:
         print(f"Error processing AIS message: {e}")
         return None, None, None, None, None, None
+
+def test_ais_data(nmea_sentence):
+    decoded_messages = list(ais.stream.decode([nmea_sentence]))
+
+    # Cetak hasil dekode
+    for msg in decoded_messages:
+        print(msg)
 
 def extract_ais_data(nmea_sentence):
     """Decode data AIS menggunakan pyais."""
@@ -104,32 +112,37 @@ def receive_nmea_tcp(host, port, stop_event):
 
 def receive_nmea_udp(host, port, stop_event):
     """Menerima data NMEA dari koneksi UDP."""
-    while not stop_event.is_set():
-        try:
-            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
-                sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                sock.bind((host, port))
-                print(f"Menunggu UDP data NMEA di {host}:{port}...\nTekan Ctrl+C untuk menghentikan.")
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 65536)
+        sock.bind((host, port))
+        print(f"Menunggu UDP data NMEA di {host}:{port}...\nTekan Ctrl+C untuk menghentikan.")
 
-                while not stop_event.is_set():
-                    sock.settimeout(1.0)
-                    try:
-                        data, addr = sock.recvfrom(1024)
-                        print(f"Diterima data dari {addr}: {data}")
-                        nmea_data = data.decode("utf-8").strip()
-                        print(f"Diterima dari {addr}: {nmea_data}")
+        count = 0
+        start_time = time.time()
 
-                        # Simpan history berdasarkan MMSI
-                        mmsi, lat, lon, sog, cog, ship_type = process_ais_message(nmea_data)
-                        if mmsi:
-                            save_ais_data(nmea_data, mmsi, lat, lon, sog, cog, ship_type)
-                    except socket.timeout:
-                        continue
-        except Exception as e:
-            print(f"Gagal bind ke {host}:{port}, mencoba lagi dalam 10 detik... Error: {e}")
-            time.sleep(10)
-        finally:
-            print("Receiver stopped.")
+        while not stop_event.is_set():
+            try:
+                sock.settimeout(1.0)
+                data, addr = sock.recvfrom(1024)
+                count += 1
+
+                if time.time() - start_time >= 60:
+                    print(f"Total data diterima dalam 1 menit: {count}")
+                    count = 0
+                    start_time = time.time()
+
+                nmea_data = data.decode("utf-8").strip()
+                test_ais_data(nmea_data)
+                # print(f"Diterima dari {port}: {nmea_data}")
+                # mmsi, lat, lon, sog, cog, ship_type = process_ais_message(nmea_data)
+                # if mmsi:
+                #     save_ais_data(nmea_data, mmsi, lat, lon, sog, cog, ship_type)
+
+            except socket.timeout:
+                continue
+            except Exception as e:
+                print(f"Error saat menerima data: {e}")
 
 def receive_nmea_serial(port, baudrate, stop_event):
     """Menerima data NMEA AIS dari port serial (COM)."""
@@ -195,7 +208,7 @@ def start_multi_receiver(stop_event):
                         continue
 
                     if protocol == 'udp':
-                        thread = threading.Thread(target=receive_nmea_udp(address, int(port), stop_event))
+                        thread = threading.Thread(target=receive_nmea_udp, args=(address, int(port), stop_event))
 
                     elif protocol == 'tcp':
                         thread = threading.Thread(target=receive_nmea_tcp, args=(address, int(port), stop_event))
