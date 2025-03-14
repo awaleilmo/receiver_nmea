@@ -34,6 +34,7 @@ class ConnectionWindow(QDialog):
         font.setPointSize(9)
         font.setBold(True)
 
+
         if not data:
             print("Tidak ada data yang ditemukan.")
             return
@@ -60,11 +61,11 @@ class ConnectionWindow(QDialog):
             # parsing data
             DType = QLabel(con["type"].upper())
             DName = QLabel(con["name"].upper())
-            DDataPort = QLabel(con["data_port"].upper())
+            DDataPort = QLabel(con["data_port"])
             DBaudrate = QLabel(str(con["baudrate"]))
 
-            DAddress = QLabel(str(con["address"]))
-            DPort = QLabel(str(con["port"]))
+            DAddress = QLabel(con["address"])
+            DPort = QLabel(con["port"])
 
             for label in [DName, DType, DAddress, DPort, DBaudrate, DDataPort]:
                 label.setFont(font)

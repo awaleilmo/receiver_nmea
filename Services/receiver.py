@@ -5,7 +5,6 @@ import requests
 import threading
 
 import serial
-from setuptools.package_index import socket_timeout
 
 from Controllers.AISHistory_controller import save_ais_data
 from Controllers.Configure_controller import get_config
@@ -108,14 +107,15 @@ def receive_nmea_udp(host, port, stop_event):
     while not stop_event.is_set():
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
-                sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # Agar bisa di-restart tanpa error
+                sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 sock.bind((host, port))
-                print(f"Menunggu data NMEA di {host}:{port}...\nTekan Ctrl+C untuk menghentikan.")
+                print(f"Menunggu UDP data NMEA di {host}:{port}...\nTekan Ctrl+C untuk menghentikan.")
 
                 while not stop_event.is_set():
                     sock.settimeout(1.0)
                     try:
                         data, addr = sock.recvfrom(1024)
+                        print(f"Diterima data dari {addr}: {data}")
                         nmea_data = data.decode("utf-8").strip()
                         print(f"Diterima dari {addr}: {nmea_data}")
 
@@ -178,12 +178,10 @@ def start_multi_receiver(stop_event):
         has_active_connection = False
 
         for dataset in data:
-            try:
                 if dataset.get('active') == 0:
                     continue
 
                 has_active_connection = True
-                print(f"Memproses dataset: {dataset}")  # Debugging, pastikan data benar
 
                 if dataset.get('type') == 'network':
                     thread = None  # Inisialisasi thread
@@ -197,7 +195,7 @@ def start_multi_receiver(stop_event):
                         continue
 
                     if protocol == 'udp':
-                        thread = threading.Thread(target=receive_nmea_udp, args=(address, int(port), stop_event))
+                        thread = threading.Thread(target=receive_nmea_udp(address, int(port), stop_event))
 
                     elif protocol == 'tcp':
                         thread = threading.Thread(target=receive_nmea_tcp, args=(address, int(port), stop_event))
@@ -222,9 +220,6 @@ def start_multi_receiver(stop_event):
                         time.sleep(1)
                 else:
                     print(f"Jenis dataset tidak valid: {dataset}")
-
-            except Exception as e:
-                print(f"Error saat memproses dataset {dataset}: {e}")
 
         if not has_active_connection:
             print("⚠️ Tidak ada koneksi aktif! Menunggu stop_event...")

@@ -11,8 +11,9 @@ def save_ais_data(nmea, mmsi, lat, lon, sog, cog, ship_type):
     Menyimpan data AIS ke database.
     """
     with Session() as session:
+        timestamp = datetime.datetime.utcnow()
         try:
-            ais_data = AISHistory(nmea=nmea, mmsi=mmsi, lat=lat, lon=lon, sog=sog, cog=cog, ship_type=ship_type)
+            ais_data = AISHistory(nmea=nmea, mmsi=mmsi, lat=lat, lon=lon, sog=sog, cog=cog, ship_type=ship_type, received_at=timestamp)
             session.add(ais_data)
             session.commit()
         except Exception as e:
