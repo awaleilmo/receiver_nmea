@@ -5,7 +5,7 @@ import requests
 import threading
 
 import serial
-import ais.stream
+import ais
 
 from Controllers.AISHistory_controller import save_ais_data
 from Controllers.Configure_controller import get_config
@@ -49,11 +49,11 @@ def process_ais_message(nmea_sentence):
         return None, None, None, None, None, None
 
 def test_ais_data(nmea_sentence):
-    decoded_messages = list(ais.stream.decode([nmea_sentence]))
+    payload = nmea_sentence.split(",")[5]
+    decoded_messages = ais.decode(payload, 0)
 
     # Cetak hasil dekode
-    for msg in decoded_messages:
-        print(msg)
+    print(decoded_messages)
 
 def extract_ais_data(nmea_sentence):
     """Decode data AIS menggunakan pyais."""
