@@ -156,13 +156,13 @@ def receive_nmea_serial(port, baudrate, stop_event):
             while not stop_event.is_set():  # Perbaikan: Pakai ()
                 if ser.in_waiting > 0:
                     nmea_data = ser.read(ser.in_waiting).decode('utf-8', errors='ignore').strip()
-                    if nmea_data:
-                        print(f"Diterima dari {port}: {nmea_data}")
+                    print(f"Diterima dari {port}: {nmea_data}")
+                    test_ais_data(nmea_data)
 
                         # Proses data AIS hanya jika valid
-                        mmsi, lat, lon, sog, cog, ship_type = process_ais_message(nmea_data)
-                        if mmsi:
-                            save_ais_data(nmea_data, mmsi, lat, lon, sog, cog, ship_type)
+                        # mmsi, lat, lon, sog, cog, ship_type = process_ais_message(nmea_data)
+                        # if mmsi:
+                        #     save_ais_data(nmea_data, mmsi, lat, lon, sog, cog, ship_type)
                 time.sleep(0.1)
         except serial.SerialException as e:  # Menangani error jika port tidak bisa dibuka
             print(f"Gagal bind ke {port} {baudrate}, mencoba lagi dalam 10 detik... Error: {e}")
