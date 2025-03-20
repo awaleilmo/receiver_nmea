@@ -1,10 +1,12 @@
 from PyQt6.QtWidgets import QDialog, QGroupBox, QGridLayout, QVBoxLayout, QWidget, QCheckBox, QLabel, QDialogButtonBox
 from PyQt6.QtGui import QStandardItemModel, QStandardItem, QFont
 from PyQt6.uic import loadUi
-from Controllers.Connection_controller import get_connection, update_connection_status
+from PyQt6.QtCore import pyqtSignal
+from Controllers.Connection_controller import get_connection, update_connection_status, delete_connection
 from Pages.Add_Connection_page import AddConnectionWindow
 
 class ConnectionWindow(QDialog):
+    data_saved = pyqtSignal()
     def __init__(self, parent=None):
         super().__init__(parent)
         self.selected_group = None
@@ -17,6 +19,7 @@ class ConnectionWindow(QDialog):
 
         self.add_button.clicked.connect(self.AddConnectionWindow)
         self.edit_button.clicked.connect(self.EditConnectionWindow)
+        self.remove_button.clicked.connect(self.RemoveConnectionWindow)
 
         self.connection_checkboxes = {}
         self.load_data()
@@ -137,6 +140,7 @@ class ConnectionWindow(QDialog):
         for conn_id, checkbox in self.connection_checkboxes.items():
             new_status = 1 if checkbox.isChecked() else 0
             update_connection_status(conn_id, new_status)
+            self.data_saved.emit()
         print("Perubahan telah disimpan.")
 
     def AddConnectionWindow(self):
@@ -164,3 +168,12 @@ class ConnectionWindow(QDialog):
         edit_connection_window = AddConnectionWindow(self, connection_data)
         edit_connection_window.data_saved.connect(self.load_data)
         edit_connection_window.exec()
+
+    def RemoveConnectionWindow(self):
+        if not self.selected_group:
+            print("Tidak ada group yang dipilih.")
+            return
+
+        connection_id = self.selected_group.property("connection_id")
+        delete_connection(connection_id)
+        self.load_data()

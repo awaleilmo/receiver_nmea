@@ -7,13 +7,14 @@ import threading
 import serial
 import ais
 
-from Controllers.AISHistory_controller import save_ais_data
+from Controllers.AISHistory_controller import check_ais_static, save_nmea_data
 from Controllers.Configure_controller import get_config
 from Controllers.Connection_controller import get_connection
 
 ais_buffer = {}
 
 LARAVEL_API_URL = get_config()['api_server']
+
 
 def process_ais_message(nmea_sentence):
     """Mengelola pesan AIS multi-fragment sebelum didecode."""
@@ -48,12 +49,19 @@ def process_ais_message(nmea_sentence):
         print(f"Error processing AIS message: {e}")
         return None, None, None, None, None, None
 
-def test_ais_data(nmea_sentence):
-    payload = nmea_sentence.split(",")[5]
-    decoded_messages = ais.decode(payload, 0)
 
-    # Cetak hasil dekode
-    print(decoded_messages)
+def test_ais_data(nmea_sentence, connection_id):
+    parts = nmea_sentence.split(",")
+    if len(parts) > 5:
+        payload = parts[5]
+        messages = ais.decode(payload, 0)
+
+        json_data = json.dumps(messages, indent=4)
+        # Cetak hasil dekode
+        check_ais_static(messages, connection_id)
+        # print(decoded_messages)
+    else:
+        print("Invalid NMEA sentence format")
 
 def extract_ais_data(nmea_sentence):
     """Decode data AIS menggunakan pyais."""
@@ -83,7 +91,8 @@ def extract_ais_data(nmea_sentence):
         print(f"Error decoding AIS data: {e}")
     return None, None, None, None, None, None
 
-def receive_nmea_tcp(host, port, stop_event):
+
+def receive_nmea_tcp(host, port, stop_event, connection_id):
     while not stop_event.is_set():
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
@@ -99,9 +108,9 @@ def receive_nmea_tcp(host, port, stop_event):
                         print(f"Diterima dari {addr}: {nmea_data}")
 
                         # Simpan history berdasarkan MMSI
-                        mmsi, lat, lon, sog, cog, ship_type = process_ais_message(nmea_data)
-                        if mmsi:
-                            save_ais_data(nmea_data, mmsi, lat, lon, sog, cog, ship_type)
+                        # mmsi, lat, lon, sog, cog, ship_type = process_ais_message(nmea_data)
+                        # if mmsi:
+                        #     save_ais_data(nmea_data, mmsi, lat, lon, sog, cog, ship_type)
                     except socket.timeout:
                         continue
         except Exception as e:
@@ -110,7 +119,8 @@ def receive_nmea_tcp(host, port, stop_event):
         finally:
             print("Receiver stopped.")
 
-def receive_nmea_udp(host, port, stop_event):
+
+def receive_nmea_udp(host, port, stop_event, connection_id):
     """Menerima data NMEA dari koneksi UDP."""
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -133,7 +143,8 @@ def receive_nmea_udp(host, port, stop_event):
                     start_time = time.time()
 
                 nmea_data = data.decode("utf-8").strip()
-                test_ais_data(nmea_data)
+                save_nmea_data(nmea_data, connection_id)
+                # test_ais_data(nmea_data)
                 # print(f"Diterima dari {port}: {nmea_data}")
                 # mmsi, lat, lon, sog, cog, ship_type = process_ais_message(nmea_data)
                 # if mmsi:
@@ -144,7 +155,8 @@ def receive_nmea_udp(host, port, stop_event):
             except Exception as e:
                 print(f"Error saat menerima data: {e}")
 
-def receive_nmea_serial(port, baudrate, stop_event):
+
+def receive_nmea_serial(port, baudrate, stop_event, connection_id):
     """Menerima data NMEA AIS dari port serial (COM)."""
     ser = None  # Pastikan ser dideklarasikan sebelum try
 
@@ -153,17 +165,25 @@ def receive_nmea_serial(port, baudrate, stop_event):
             ser = serial.Serial(port=port, baudrate=baudrate, timeout=0.5, exclusive=True)
             print(f"Menunggu data NMEA dari {port}...")
 
+            count = 0
+            start_time = time.time()
+
             while not stop_event.is_set():  # Perbaikan: Pakai ()
                 if ser.in_waiting > 0:
+                    save_nmea_data(nmea_data, connection_id)
+
+                    if time.time() - start_time >= 60:
+                        print(f"Total data diterima dalam 1 menit: {count}")
+                        count = 0
+                        start_time = time.time()
                     nmea_data = ser.read(ser.in_waiting).decode('utf-8', errors='ignore').strip()
                     print(f"Diterima dari {port}: {nmea_data}")
-                    test_ais_data(nmea_data)
 
-                        # Proses data AIS hanya jika valid
-                        # mmsi, lat, lon, sog, cog, ship_type = process_ais_message(nmea_data)
-                        # if mmsi:
-                        #     save_ais_data(nmea_data, mmsi, lat, lon, sog, cog, ship_type)
-                time.sleep(0.1)
+                    # Proses data AIS hanya jika valid
+                    # mmsi, lat, lon, sog, cog, ship_type = process_ais_message(nmea_data)
+                    # if mmsi:
+                    #     save_ais_data(nmea_data, mmsi, lat, lon, sog, cog, ship_type)
+                time.sleep(0.05)
         except serial.SerialException as e:  # Menangani error jika port tidak bisa dibuka
             print(f"Gagal bind ke {port} {baudrate}, mencoba lagi dalam 10 detik... Error: {e}")
             time.sleep(10)
@@ -183,7 +203,6 @@ def receive_nmea_serial(port, baudrate, stop_event):
     print("Receiver serial stopped.")
 
 
-
 def start_multi_receiver(stop_event):
     try:
         data = get_connection()
@@ -191,48 +210,51 @@ def start_multi_receiver(stop_event):
         has_active_connection = False
 
         for dataset in data:
-                if dataset.get('active') == 0:
+            if dataset.get('active') == 0:
+                continue
+
+            has_active_connection = True
+
+            if dataset.get('type') == 'network':
+                thread = None  # Inisialisasi thread
+
+                protocol = dataset.get('network')
+                address = dataset.get('address')
+                port = dataset.get('port')
+
+                if not address or not port:
+                    print(f"Konfigurasi tidak valid: {dataset}")
                     continue
 
-                has_active_connection = True
+                if protocol == 'udp':
+                    thread = threading.Thread(target=receive_nmea_udp,
+                                              args=(address, int(port), stop_event, dataset.get('id')))
 
-                if dataset.get('type') == 'network':
-                    thread = None  # Inisialisasi thread
+                elif protocol == 'tcp':
+                    thread = threading.Thread(target=receive_nmea_tcp,
+                                              args=(address, int(port), stop_event, dataset.get('id')))
 
-                    protocol = dataset.get('network')
-                    address = dataset.get('address')
-                    port = dataset.get('port')
+                if thread:
+                    thread.start()
+                    threads.append(thread)
+                    time.sleep(0.1)  # Hindari CPU overload
+            elif dataset.get('type') == 'serial':
 
-                    if not address or not port:
-                        print(f"Konfigurasi tidak valid: {dataset}")
-                        continue
+                data_port = dataset.get('data_port')
+                baudrate = dataset.get('baudrate')
 
-                    if protocol == 'udp':
-                        thread = threading.Thread(target=receive_nmea_udp, args=(address, int(port), stop_event))
+                if not data_port or not baudrate:
+                    print(f"Konfigurasi tidak valid: {dataset}")
+                    continue
 
-                    elif protocol == 'tcp':
-                        thread = threading.Thread(target=receive_nmea_tcp, args=(address, int(port), stop_event))
-
-                    if thread:
-                        thread.start()
-                        threads.append(thread)
-                        time.sleep(0.1)  # Hindari CPU overload
-                elif dataset.get('type') == 'serial':
-
-                    data_port = dataset.get('data_port')
-                    baudrate = dataset.get('baudrate')
-
-                    if not data_port or not baudrate:
-                        print(f"Konfigurasi tidak valid: {dataset}")
-                        continue
-
-                    thread = threading.Thread(target=receive_nmea_serial, args=(data_port, int(baudrate), stop_event))
-                    if thread:
-                        thread.start()
-                        threads.append(thread)
-                        time.sleep(1)
-                else:
-                    print(f"Jenis dataset tidak valid: {dataset}")
+                thread = threading.Thread(target=receive_nmea_serial,
+                                          args=(data_port, int(baudrate), stop_event, dataset.get('id')))
+                if thread:
+                    thread.start()
+                    threads.append(thread)
+                    time.sleep(1)
+            else:
+                print(f"Jenis dataset tidak valid: {dataset}")
 
         if not has_active_connection:
             print("⚠️ Tidak ada koneksi aktif! Menunggu stop_event...")

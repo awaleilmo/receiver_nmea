@@ -73,3 +73,16 @@ def update_connection_status(id, active):
         raise e
     finally:
         session.close()
+
+def delete_connection(id):
+    session = Session()
+    try:
+        res = session.query(ConnectionModel).filter_by(id=id).first()
+        session.delete(res)
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        print(f"Error: {e}")
+        raise e
+    finally:
+        session.close()

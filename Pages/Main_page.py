@@ -5,7 +5,7 @@ from PyQt6.QtWidgets import QApplication, QMainWindow, QDialog, QSystemTrayIcon,
 from PyQt6.uic import loadUi
 
 
-from Controllers.AISHistory_controller import get_all_ais_data
+# from Controllers.AISHistory_controller import get_all_ais_data
 from Services import sender, receiver
 from Pages.Config_page import ConfigureWindow
 from Pages.Connection_page import ConnectionWindow
@@ -99,22 +99,22 @@ class AISViewer(QMainWindow):
             ["ID", "MMSI", "Latitude", "Longitude", "Speed (knots)", "Course (°)", "Ship Type", "Received At"]
         )
 
-        rows = get_all_ais_data()
-
-        # Tambahkan data ke model
-        for row in rows:
-            items = [
-                QStandardItem(str(row["id"])),
-                QStandardItem(str(row["mmsi"])),
-                QStandardItem(str(row["lat"])),
-                QStandardItem(str(row["lon"])),
-                QStandardItem(str(row["sog"])),
-                QStandardItem(str(row["cog"])),
-                QStandardItem(str(row["ship_type"])),
-                QStandardItem(str(row["received_at"]))
-            ]
-
-            self.model.appendRow(items)
+        # rows = get_all_ais_data()
+        #
+        # # Tambahkan data ke model
+        # for row in rows:
+        #     items = [
+        #         QStandardItem(str(row["id"])),
+        #         QStandardItem(str(row["mmsi"])),
+        #         QStandardItem(str(row["lat"])),
+        #         QStandardItem(str(row["lon"])),
+        #         QStandardItem(str(row["sog"])),
+        #         QStandardItem(str(row["cog"])),
+        #         QStandardItem(str(row["ship_type"])),
+        #         QStandardItem(str(row["received_at"]))
+        #     ]
+        #
+        #     self.model.appendRow(items)
 
         # Atur model ke QTableView
         self.tableView.setModel(self.model)
@@ -223,10 +223,14 @@ class AISViewer(QMainWindow):
 
     def showConfigure(self):
         """Menampilkan jendela konfigurasi"""
+        self.stop_receiver()
         dlg = ConfigureWindow(self)
+        dlg.data_saved.connect(self.start_receiver())
         dlg.exec()
 
     def showConnection(self):
         """Menampilkan jendela koneksi"""
+        self.stop_receiver()
         dlg = ConnectionWindow(self)
+        # dlg.data_saved.connect(self.start_receiver())
         dlg.exec()

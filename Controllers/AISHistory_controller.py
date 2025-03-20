@@ -1,15 +1,55 @@
 from sqlalchemy.orm import sessionmaker
+
+from Models import ais_satic, ais_data, nmea_data
 from Models.__init__ import engine
-from Models.AISHistory_model import AISHistory
 import datetime
 
 # Buat session factory
 Session = sessionmaker(bind=engine)
 
-def save_ais_data(nmea, mmsi, lat, lon, sog, cog, ship_type):
-    """
-    Menyimpan data AIS ke database.
-    """
+def save_nmea_data(data, connection_ids):
+    connection_id = connection_ids
+    nmea = data
+
+    with Session() as session:
+        timestamp = datetime.datetime.utcnow()
+        try:
+            nmea_data_res = nmea_data(nmea=nmea, connection_id=connection_id, created_at=timestamp, updated_at=timestamp)
+            session.add(nmea_data_res)
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            raise e
+def check_ais_static(data,connection_id):
+    mmsi = data.get("mmsi", None)
+    with Session() as session:
+        try:
+            # save_ais_data(data, connection_id)
+            check =  session.query(ais_satic).filter(ais_satic.mmsi == mmsi).first()
+            if check is None:
+                print(f"baru: {connection_id}")
+            else:
+                print("update")
+        except Exception as e:
+            session.rollback()
+            raise e
+        finally:
+            session.close()
+
+def save_ais_static(data):
+    with Session() as session:
+        timestamp = datetime.datetime.utcnow()
+        try:
+            res = ais_satic(mmsi=mmsi, ais_version=ais_version, imo_number=imo_number, callsign=callsign, shipname=shipname, shiptype=shiptype, dimension_to_bow=dimension_to_bow, dimension_to_stern=dimension_to_stern, dimension_to_port=dimension_to_port, dimension_to_starboard=dimension_to_starboard, position_fix_type=position_fix_type, eta=eta, draught=draught, destination=destination, dte=dte, created_at=timestamp, updated_at=timestamp)
+            session.add(res)
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            raise e
+def save_ais_data(data, connection_ids):
+    connection_id = connection_ids
+    mmsi = data.get("mmsi", None)
+
     with Session() as session:
         timestamp = datetime.datetime.utcnow()
         try:

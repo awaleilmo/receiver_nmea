@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="nmea_data" uuid="54d87261-47d2-4598-a16e-55016476e601">
+    <data-source source="LOCAL" name="nmea_data" uuid="4e52cdb8-5a4a-4257-97c7-e87e3314a634">
       <driver-ref>sqlite.xerial</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
-      <jdbc-url>jdbc:sqlite:C:\tutorial\receiver_nmea\nmea_data.db</jdbc-url>
+      <jdbc-url>jdbc:sqlite:D:\project\receiver_nmea\nmea_data.db</jdbc-url>
       <jdbc-additional-properties>
         <property name="com.intellij.clouds.kubernetes.db.enabled" value="false" />
       </jdbc-additional-properties>
