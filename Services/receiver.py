@@ -50,15 +50,23 @@ def process_ais_message(nmea_sentence):
         return None, None, None, None, None, None
 
 
-def test_ais_data(nmea_sentence, connection_id):
+def test_ais_data(nmea_sentence):
     parts = nmea_sentence.split(",")
     if len(parts) > 5:
         payload = parts[5]
         messages = ais.decode(payload, 0)
 
         json_data = json.dumps(messages, indent=4)
+        try:
+            send_to_api = requests.post(LARAVEL_API_URL, json=json_data)
+            if send_to_api.status_code == 200 or send_to_api.status_code == 201:
+                print(f"Berhasil mengirim data ke Laravel API: {send_to_api.text}")
+            else:
+                print(f"Gagal mengirim data ke Laravel API: {send_to_api.text}")
+        except Exception as e:
+            print('API is Off')
         # Cetak hasil dekode
-        check_ais_static(messages, connection_id)
+        # check_ais_static(messages, connection_id)
         # print(decoded_messages)
     else:
         print("Invalid NMEA sentence format")
@@ -144,7 +152,7 @@ def receive_nmea_udp(host, port, stop_event, connection_id):
 
                 nmea_data = data.decode("utf-8").strip()
                 save_nmea_data(nmea_data, connection_id)
-                # test_ais_data(nmea_data)
+                test_ais_data(nmea_data)
                 # print(f"Diterima dari {port}: {nmea_data}")
                 # mmsi, lat, lon, sog, cog, ship_type = process_ais_message(nmea_data)
                 # if mmsi:
@@ -171,6 +179,7 @@ def receive_nmea_serial(port, baudrate, stop_event, connection_id):
             while not stop_event.is_set():  # Perbaikan: Pakai ()
                 if ser.in_waiting > 0:
                     save_nmea_data(nmea_data, connection_id)
+                    test_ais_data(nmea_data)
 
                     if time.time() - start_time >= 60:
                         print(f"Total data diterima dalam 1 menit: {count}")
