@@ -38,69 +38,14 @@
       <property name="lineWidth">
        <number>2</number>
       </property>
-      <widget class="QPushButton" name="btn_refresh">
-       <property name="geometry">
-        <rect>
-         <x>10</x>
-         <y>10</y>
-         <width>75</width>
-         <height>25</height>
-        </rect>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>150</width>
-         <height>16777215</height>
-        </size>
-       </property>
-       <property name="font">
-        <font>
-         <pointsize>10</pointsize>
-        </font>
-       </property>
-       <property name="text">
-        <string>Refresh</string>
-       </property>
-      </widget>
-      <widget class="QPushButton" name="btn_open_map">
-       <property name="geometry">
-        <rect>
-         <x>91</x>
-         <y>10</y>
-         <width>75</width>
-         <height>25</height>
-        </rect>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>150</width>
-         <height>16777215</height>
-        </size>
-       </property>
-       <property name="font">
-        <font>
-         <pointsize>10</pointsize>
-        </font>
-       </property>
-       <property name="text">
-        <string>Buka Peta</string>
-       </property>
-       <property name="autoDefault">
-        <bool>false</bool>
-       </property>
-       <property name="default">
-        <bool>false</bool>
-       </property>
-       <property name="flat">
-        <bool>false</bool>
-       </property>
-      </widget>
      </widget>
     </item>
     <item row="1" column="0">
-     <widget class="QTableView" name="tableView">
-      <property name="sizeAdjustPolicy">
-       <enum>QAbstractScrollArea::SizeAdjustPolicy::AdjustToContents</enum>
+     <widget class="QListView" name="listView">
+      <property name="font">
+       <font>
+        <pointsize>12</pointsize>
+       </font>
       </property>
      </widget>
     </item>

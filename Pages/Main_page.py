@@ -5,14 +5,11 @@ from PyQt6.QtWidgets import QApplication, QMainWindow, QDialog, QSystemTrayIcon,
 from PyQt6.uic import loadUi
 
 
-# from Controllers.AISHistory_controller import get_all_ais_data
 from Services import sender, receiver
 from Pages.Config_page import ConfigureWindow
 from Pages.Connection_page import ConnectionWindow
-
-
-# from map_viewer import generate_map
-
+from Services.SignalsMessages import signals
+from Services.uploader import send_batch_data
 
 class AISViewer(QMainWindow):
     def __init__(self):
@@ -24,6 +21,7 @@ class AISViewer(QMainWindow):
         self.toggleSender = False
         self.stop_receiver_event = threading.Event()
         self.stop_sender_event = threading.Event()
+        self.stop_upload_event = threading.Event()
 
         # Muat file .ui menggunakan loadUi dari PyQt6
         loadUi("UI/main.ui", self)
@@ -62,15 +60,6 @@ class AISViewer(QMainWindow):
         self.stop_sender_action.triggered.connect(self.stop_sender)
         self.exit_action.triggered.connect(self.exit)
 
-        # Hubungkan tombol "Refresh Data" ke fungsi refresh_data
-        self.btn_refresh.clicked.connect(self.load_data)
-
-        # Hubungkan tombol "Set Filter" ke fungsi set_mmsi_filter
-        # self.btn_set_filter.clicked.connect(self.set_mmsi_filter)
-
-        # Hubungkan tombol "Buka Peta" ke fungsi show_map
-        self.btn_open_map.clicked.connect(self.show_map)
-
         # Hubungkan tombol "Exit" ke fungsi exit
         self.actionExit.triggered.connect(self.exit)
         self.actionConfigure.triggered.connect(self.showConfigure)
@@ -90,34 +79,24 @@ class AISViewer(QMainWindow):
         self.statusbar.addPermanentWidget(self.SenderLabel)
 
         # Muat data awal
-        self.load_data()
+        self.list_model = QStandardItemModel(self)
+        self.listView.setModel(self.list_model)
+        signals.new_data_received.connect(self.update_log)
+        self.start_upload()
 
-    def load_data(self):
-        """Ambil data AIS terbaru dari database dan tampilkan di GUI"""
-        self.model = QStandardItemModel()
-        self.model.setHorizontalHeaderLabels(
-            ["ID", "MMSI", "Latitude", "Longitude", "Speed (knots)", "Course (°)", "Ship Type", "Received At"]
-        )
+    def update_log(self, message):
+        item = QStandardItem(message)
+        self.list_model.appendRow(item)
 
-        # rows = get_all_ais_data()
-        #
-        # # Tambahkan data ke model
-        # for row in rows:
-        #     items = [
-        #         QStandardItem(str(row["id"])),
-        #         QStandardItem(str(row["mmsi"])),
-        #         QStandardItem(str(row["lat"])),
-        #         QStandardItem(str(row["lon"])),
-        #         QStandardItem(str(row["sog"])),
-        #         QStandardItem(str(row["cog"])),
-        #         QStandardItem(str(row["ship_type"])),
-        #         QStandardItem(str(row["received_at"]))
-        #     ]
-        #
-        #     self.model.appendRow(items)
+        # Auto-scroll ke item terbaru
+        self.listView.scrollToBottom()
 
-        # Atur model ke QTableView
-        self.tableView.setModel(self.model)
+    def start_upload(self):
+        upload_thread = threading.Thread(target=send_batch_data, args=(self.stop_upload_event,), daemon=True)
+        upload_thread.start()
+
+    def stop_upload(self):
+        self.stop_upload_event.set()
 
     def run_receiver_thread(self):
         """Wrapper untuk menjalankan receiver di thread"""
@@ -154,13 +133,6 @@ class AISViewer(QMainWindow):
             self.ReceiverLabel.setText("Receiver: Stopped")
             self.statusbar.showMessage('Receiver Stopped', 5000)
 
-    def toggle_sender_function(self):
-        """Toggle fungsi start/stop sender"""
-        if not self.toggleSender:
-            self.start_sender()
-        else:
-            self.stop_sender()
-
     def start_sender(self):
         """Menjalankan pengiriman AIS ke OpenCPN di thread terpisah"""
         if self.sender_thread is None or not self.sender_thread.is_alive():
@@ -191,20 +163,6 @@ class AISViewer(QMainWindow):
             self.SenderLabel.setText("Sender: Stopped")
             self.statusbar.showMessage('Sender Stopped', 5000)
 
-    def show_map(self):
-        """Menampilkan peta dengan lokasi kapal"""
-        # map_path = generate_map()
-        # webview.create_window("AIS Ship Tracker", map_path)
-        # webview.start()
-
-    # def set_mmsi_filter(self):
-    #     """Memperbarui daftar MMSI yang akan dikirim ke OpenCPN"""
-    #     global ALLOWED_MMSI
-    #     filter_text = self.mmsi_entry.text().strip()
-    #     mmsi_list = filter_text.split(",")
-    #     ALLOWED_MMSI = [mmsi.strip() for mmsi in mmsi_list if mmsi.strip()]
-    #     print(f"Filter MMSI diperbarui: {ALLOWED_MMSI}")
-
     def closeEvent(self, event):
         """Menangani event ketika jendela utama ditutup"""
         event.ignore()
@@ -218,6 +176,9 @@ class AISViewer(QMainWindow):
 
     def exit(self):
         """Menutup aplikasi sepenuhnya"""
+        self.stop_upload()
+        self.stop_receiver()
+        self.stop_sender()
         self.tray_icon.hide()
         QApplication.quit()
 
@@ -225,7 +186,7 @@ class AISViewer(QMainWindow):
         """Menampilkan jendela konfigurasi"""
         self.stop_receiver()
         dlg = ConfigureWindow(self)
-        dlg.data_saved.connect(self.start_receiver())
+        # dlg.data_saved.connect(self.start_receiver())
         dlg.exec()
 
     def showConnection(self):
