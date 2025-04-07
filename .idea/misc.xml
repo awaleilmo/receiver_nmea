@@ -3,5 +3,5 @@
   <component name="Black">
     <option name="sdkName" value="Python 3.13 (ais _receiver_nmea)" />
   </component>
-  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.12 (receiver_nmea)" project-jdk-type="Python SDK" />
+  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.11 virtualenv at /media/pc-awal/New_Vol/project/receiver_nmea/.venv" project-jdk-type="Python SDK" />
 </project>
