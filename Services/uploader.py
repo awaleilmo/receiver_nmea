@@ -10,6 +10,7 @@ from Services.decoder import decode_ais
 
 API_URL = get_config()['api_server']
 
+timerSleep = 15
 
 def send_batch_data(stop_event):
     """Mengirimkan data AIS dalam batch maksimal 350 data setiap 30 detik."""
@@ -18,10 +19,10 @@ def send_batch_data(stop_event):
 
         if not data:
             signals.new_data_received.emit("⚠️ Tidak ada data NMEA untuk dikirim.")
-            time.sleep(15)
+            time.sleep(timerSleep)
             continue
 
-        signals.new_data_received.emit(f"📡 Mengambil {len(data)} data NMEA untuk dikirim...")
+        signals.new_data_received.emit(f"📡 Mengambil data NMEA untuk dikirim...")
 
         decoded_list = []
         ids = []
@@ -30,11 +31,14 @@ def send_batch_data(stop_event):
             decoded_data = decode_ais(record.nmea)  # Decode AIS
 
             if decoded_data:
+                decoded_data['created_at'] = record.created_at.isoformat()
+                print(decoded_data)
+                print(decoded_data)
                 decoded_list.append(decoded_data)
                 ids.append(record.id)
 
         if not decoded_list:
-            time.sleep(15)
+            time.sleep(timerSleep)
             continue
 
         try:
@@ -50,4 +54,4 @@ def send_batch_data(stop_event):
         except requests.exceptions.RequestException as e:
             signals.new_data_received.emit(f"🚨 Koneksi ke API gagal: {e}")
 
-        time.sleep(15)  # Kirim data setiap 30 detik
+        time.sleep(timerSleep)  # Kirim data setiap 30 detik

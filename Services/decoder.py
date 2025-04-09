@@ -24,7 +24,7 @@ def try_decode(payload):
             if isinstance(decoded_messages, list) and len(decoded_messages) > 0:
                 return decoded_messages[0], version  # Ambil pesan pertama jika list
             return decoded_messages, version  # Jika bukan list, gunakan apa adanya
-        except Exception:
+        except Exception as e:
             print(f"⚠️ Gagal decode dengan versi {version}: {e}")
     return None, None  # Jika semua gagal, kembalikan None
 
