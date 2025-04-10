@@ -1,8 +1,6 @@
 import requests
 import time
 
-from bottle import response
-
 from Controllers.NMEA_controller import get_pending_data, mark_data_as_sent
 from Controllers.Configure_controller import get_config
 from Services.SignalsMessages import signals
@@ -32,8 +30,6 @@ def send_batch_data(stop_event):
 
             if decoded_data:
                 decoded_data['created_at'] = record.created_at.isoformat()
-                print(decoded_data)
-                print(decoded_data)
                 decoded_list.append(decoded_data)
                 ids.append(record.id)
 

@@ -104,6 +104,7 @@ def receive_nmea_udp(host, port, stop_event, connection_id):
                     start_time = time.time()
 
                 nmea_data = data.decode("utf-8").strip()
+                signals.new_data_received.emit(f"Diterima dari {host}:{port}: {nmea_data}")
                 save_nmea_data(nmea_data, connection_id)
 
             except socket.timeout:

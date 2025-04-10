@@ -8,4 +8,5 @@ build
 /build_linux/appimagetool
 dist
 *.spec
+*.AppImage
 nmea_data.db
