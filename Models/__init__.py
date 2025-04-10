@@ -1,13 +1,17 @@
-import datetime
+import os
+import sys
+
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
 
 from Models.NMEA_model import nmea_data
 from Models.Config_model import ConfigModel
-from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime
-from sqlalchemy.ext.declarative import declarative_base
 from Models.Connection_model import ConnectionModel
+from Untils.path_helper import get_resource_path
 
 Base = declarative_base()
-engine = create_engine(f"sqlite:///nmea_data.db")
+db_path = get_resource_path("nmea_data.db")
+engine = create_engine(f"sqlite:///{db_path}")
 
 nmea_data.__table__.create(bind=engine, checkfirst=True)
 ConfigModel.__table__.create(bind=engine, checkfirst=True)

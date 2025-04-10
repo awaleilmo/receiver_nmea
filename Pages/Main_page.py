@@ -1,8 +1,9 @@
 import sys
 import threading
-from PyQt6.QtGui import QStandardItemModel, QStandardItem, QIcon
+from PyQt6.QtGui import QStandardItemModel, QStandardItem, QIcon, QFont
 from PyQt6.QtWidgets import QApplication, QMainWindow, QDialog, QSystemTrayIcon, QMenu, QLabel
 from PyQt6.uic import loadUi
+from Untils.path_helper import get_resource_path
 
 
 from Services import sender, receiver
@@ -14,7 +15,7 @@ from Services.uploader import send_batch_data
 class AISViewer(QMainWindow):
     def __init__(self):
         super().__init__()
-        icon = QIcon("Assets/logo_ipm.png")
+        icon = QIcon(get_resource_path("Assets/logo_ipm.png"))
         self.setWindowIcon(icon)
         self.receiver_threads = []
         self.toggleReceiver = False
@@ -24,7 +25,8 @@ class AISViewer(QMainWindow):
         self.stop_upload_event = threading.Event()
 
         # Muat file .ui menggunakan loadUi dari PyQt6
-        loadUi("UI/main.ui", self)
+        ui_path = get_resource_path("UI/main.ui")
+        loadUi(ui_path, self)
 
         # System Tray
         self.tray_icon = QSystemTrayIcon(self)
@@ -77,8 +79,10 @@ class AISViewer(QMainWindow):
 
         self.ReceiverLabel = QLabel("Receiver: Stopped")
         self.SenderLabel = QLabel("Sender: Stopped")
+        self.UploadLabel = QLabel("Upload: Stopped")
         self.statusbar.addPermanentWidget(self.ReceiverLabel)
         self.statusbar.addPermanentWidget(self.SenderLabel)
+        self.statusbar.addPermanentWidget(self.UploadLabel)
 
         # Muat data awal
         self.list_model = QStandardItemModel(self)
@@ -90,14 +94,20 @@ class AISViewer(QMainWindow):
         item = QStandardItem(message)
         self.list_model.appendRow(item)
 
+        emoji_font = QFont("Noto Color Emoji")
+        emoji_font.setPointSize(10)
+        item.setFont(emoji_font)
+
         # Auto-scroll ke item terbaru
         self.listView.scrollToBottom()
 
     def start_upload(self):
+        self.UploadLabel.setText("Upload: Running")
         upload_thread = threading.Thread(target=send_batch_data, args=(self.stop_upload_event,), daemon=True)
         upload_thread.start()
 
     def stop_upload(self):
+        self.UploadLabel.setText("Upload: Stopped")
         self.stop_upload_event.set()
 
     def run_receiver_thread(self):
@@ -191,8 +201,9 @@ class AISViewer(QMainWindow):
     def showConfigure(self):
         """Menampilkan jendela konfigurasi"""
         self.stop_receiver()
+        self.stop_upload()
         dlg = ConfigureWindow(self)
-        # dlg.data_saved.connect(self.start_receiver())
+        dlg.data_saved.connect(self.start_upload)
         dlg.exec()
 
     def showConnection(self):

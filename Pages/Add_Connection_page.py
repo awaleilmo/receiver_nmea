@@ -4,13 +4,15 @@ from PyQt6.QtWidgets import QDialog
 import serial.tools.list_ports
 
 from Controllers.Connection_controller import save_connection, update_connection
+from Untils.path_helper import get_resource_path
 
 
 class AddConnectionWindow(QDialog):
     data_saved = pyqtSignal()
     def __init__(self, parent=None, connection_data=None):
         super().__init__(parent)
-        loadUi("UI/add_connection.ui", self)
+        ui_path = get_resource_path("UI/add_connection.ui")
+        loadUi(ui_path, self)
 
         self.connection_data = connection_data
 

@@ -1,3 +1,11 @@
 .idea
 .venv
+build
+/dist/
+/build_linux/*.AppImage
+/build_linux/*.AppDir
+/build_linux/SeaScope_Receiver
+/build_linux/appimagetool
+dist
+*.spec
 nmea_data.db

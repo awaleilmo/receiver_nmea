@@ -4,13 +4,16 @@ from PyQt6.uic import loadUi
 from PyQt6.QtCore import pyqtSignal
 from Controllers.Connection_controller import get_connection, update_connection_status, delete_connection
 from Pages.Add_Connection_page import AddConnectionWindow
+from Untils.path_helper import get_resource_path
+
 
 class ConnectionWindow(QDialog):
     data_saved = pyqtSignal()
     def __init__(self, parent=None):
         super().__init__(parent)
         self.selected_group = None
-        loadUi("UI/connection.ui", self)
+        ui_path = get_resource_path("UI/connection.ui")
+        loadUi(ui_path, self)
 
         self.scrollArea.setWidgetResizable(True)
         self.scroll_content = QWidget()

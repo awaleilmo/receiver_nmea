@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=SeaScope Receiver
+Exec=SeaScope_Receiver
+Icon=logo_ipm
+Type=Application
+Categories=Utility;
+Terminal=false
