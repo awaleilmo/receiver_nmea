@@ -32,6 +32,7 @@ class AISViewer(QMainWindow):
         self.tray_menu = QMenu()
         iconRunTray = QIcon.fromTheme("media-playback-start")
         iconStopTray = QIcon.fromTheme("media-playback-stop")
+        self.open_app_action = self.tray_menu.addAction("Open App")
         self.run_receiver_action = self.tray_menu.addAction("Run Receiver")
         self.stop_receiver_action = self.tray_menu.addAction("Stop Receiver")
         self.run_sender_action = self.tray_menu.addAction("Run Sender")
@@ -54,6 +55,7 @@ class AISViewer(QMainWindow):
 
         # Hubungkan tindakan tray
         self.tray_icon.activated.connect(self.tray_icon_clicked)
+        self.open_app_action.triggered.connect(self.open_app_clicked)
         self.run_receiver_action.triggered.connect(self.start_receiver)
         self.stop_receiver_action.triggered.connect(self.stop_receiver)
         self.run_sender_action.triggered.connect(self.start_sender)
@@ -173,6 +175,10 @@ class AISViewer(QMainWindow):
         """Menampilkan jendela utama ketika ikon tray diklik"""
         if reason == QSystemTrayIcon.ActivationReason.Trigger:
             self.show()
+
+    def open_app_clicked(self):
+        """Menampilkan jendela utama diklik"""
+        self.tray_icon.show()
 
     def exit(self):
         """Menutup aplikasi sepenuhnya"""
