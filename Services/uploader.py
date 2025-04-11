@@ -3,7 +3,7 @@ import time
 
 from Controllers.NMEA_controller import get_pending_data, mark_data_as_sent
 from Controllers.Configure_controller import get_config
-from Services.SignalsMessages import signals
+from Services.SignalsMessages import signalsError, signalsWarning, signalsLogger
 from Services.decoder import decode_ais
 
 API_URL = get_config()['api_server']
@@ -16,11 +16,11 @@ def send_batch_data(stop_event):
         data = get_pending_data(100)  # Ambil 350 data yang belum terkirim
 
         if not data:
-            signals.new_data_received.emit("⚠️ Tidak ada data NMEA untuk dikirim.")
+            signalsWarning.new_data_received.emit("⚠️ Tidak ada data NMEA untuk dikirim.")
             time.sleep(timerSleep)
             continue
 
-        signals.new_data_received.emit(f"📡 Mengambil data NMEA untuk dikirim...")
+        signalsWarning.new_data_received.emit(f"📡 Mengambil data NMEA untuk dikirim...")
 
         decoded_list = []
         ids = []
@@ -43,11 +43,11 @@ def send_batch_data(stop_event):
             if response.status_code in [200, 201]:
                 print("🔄 Marking sent data in database...")
                 mark_data_as_sent(ids)
-                signals.new_data_received.emit(f"✅ {len(ids)} data berhasil dikirim ke API")
+                signalsLogger.new_data_received.emit(f"✅ {len(ids)} data berhasil dikirim ke API")
             else:
-                signals.new_data_received.emit(f"⚠️ Gagal mengirim data: {response.status_code} - {response.text}")
+                signalsWarning.new_data_received.emit(f"⚠️ Gagal mengirim data: {response.status_code} - {response.text}")
 
         except requests.exceptions.RequestException as e:
-            signals.new_data_received.emit(f"🚨 Koneksi ke API gagal: {e}")
+            signalsError.new_data_received.emit(f"🚨 Koneksi ke API gagal: {e}")
 
         time.sleep(timerSleep)  # Kirim data setiap 30 detik

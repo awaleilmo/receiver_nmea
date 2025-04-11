@@ -9,7 +9,7 @@ from Untils.path_helper import get_resource_path
 from Services import sender, receiver
 from Pages.Config_page import ConfigureWindow
 from Pages.Connection_page import ConnectionWindow
-from Services.SignalsMessages import signals
+from Services.SignalsMessages import signalsLogger
 from Services.uploader import send_batch_data
 
 class AISViewer(QMainWindow):
@@ -64,6 +64,7 @@ class AISViewer(QMainWindow):
         self.stop_sender_action.triggered.connect(self.stop_sender)
         self.exit_action.triggered.connect(self.exit)
 
+
         # Hubungkan tombol "Exit" ke fungsi exit
         self.actionExit.triggered.connect(self.exit)
         self.actionConfigure.triggered.connect(self.showConfigure)
@@ -87,7 +88,7 @@ class AISViewer(QMainWindow):
         # Muat data awal
         self.list_model = QStandardItemModel(self)
         self.listView.setModel(self.list_model)
-        signals.new_data_received.connect(self.update_log)
+        signalsLogger.new_data_received.connect(self.update_log)
         self.start_upload()
 
     def update_log(self, message):
@@ -185,10 +186,14 @@ class AISViewer(QMainWindow):
         """Menampilkan jendela utama ketika ikon tray diklik"""
         if reason == QSystemTrayIcon.ActivationReason.Trigger:
             self.show()
+            self.raise_()
+            self.activateWindow()
 
     def open_app_clicked(self):
         """Menampilkan jendela utama diklik"""
-        self.tray_icon.show()
+        self.show()
+        self.raise_()
+        self.activateWindow()
 
     def exit(self):
         """Menutup aplikasi sepenuhnya"""
