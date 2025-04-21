@@ -86,8 +86,9 @@ class AISViewer(QMainWindow):
         self.statusbar.addPermanentWidget(self.UploadLabel)
 
         # Muat data awal
-        self.list_model = QStandardItemModel(self)
-        self.listView.setModel(self.list_model)
+        self.list_model_logger = QStandardItemModel(self)
+        self.listViewLogger.setModel(self.list_model_logger)
+        self.labelInfo.setText("AIS Viewer")
         signalsLogger.new_data_received.connect(self.update_log)
         self.start_upload()
 
@@ -100,7 +101,7 @@ class AISViewer(QMainWindow):
         item.setFont(emoji_font)
 
         # Auto-scroll ke item terbaru
-        self.listView.scrollToBottom()
+        self.listViewLogger.scrollToBottom()
 
     def start_upload(self):
         self.UploadLabel.setText("Upload: Running")
@@ -215,5 +216,5 @@ class AISViewer(QMainWindow):
         """Menampilkan jendela koneksi"""
         self.stop_receiver()
         dlg = ConnectionWindow(self)
-        # dlg.data_saved.connect(self.start_receiver())
+        dlg.data_saved.connect(self.start_receiver)
         dlg.exec()
