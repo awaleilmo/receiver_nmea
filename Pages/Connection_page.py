@@ -9,6 +9,7 @@ from Untils.path_helper import get_resource_path
 
 class ConnectionWindow(QDialog):
     data_saved = pyqtSignal()
+#stupid python need space????????????????
     def __init__(self, parent=None):
         super().__init__(parent)
         self.selected_group = None
@@ -39,7 +40,6 @@ class ConnectionWindow(QDialog):
         font = QFont()
         font.setPointSize(9)
         font.setBold(True)
-
 
         if not data:
             print("Tidak ada data yang ditemukan.")
@@ -157,7 +157,7 @@ class ConnectionWindow(QDialog):
             return
 
         connection_data = {
-           "id": self.selected_group.property("connection_id"),
+            "id": self.selected_group.property("connection_id"),
             "name": self.selected_group.property("name"),
             "type": self.selected_group.property("type"),
             "data_port": self.selected_group.property("data_port"),
