@@ -2,9 +2,11 @@ import sys
 import threading
 from PyQt6.QtGui import QStandardItemModel, QStandardItem, QIcon, QFont, QPalette, QColor
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QDialog, QSystemTrayIcon, QMenu, QLabel,
-                             QVBoxLayout, QHBoxLayout, QWidget, QProgressDialog, QFrame, QSplitter)
+                             QVBoxLayout, QHBoxLayout, QWidget, QProgressDialog, QFrame, QSplitter, QProgressBar)
 from PyQt6.QtCore import Qt, QObject, pyqtSignal, QRunnable, QThreadPool, QSettings, QTimer
 from PyQt6.uic import loadUi
+from PySide6.QtWidgets import QPushButton
+
 from Untils.path_helper import get_resource_path
 
 from Services import sender, receiver
@@ -216,14 +218,32 @@ class AISViewer(QMainWindow):
         # Auto-scroll ke item terbaru
         view.scrollToBottom()
 
+    def create_progress_dialog(self, message, with_cancel=False):
+        """Metode helper untuk membuat dialog progress dengan tampilan yang konsisten"""
+        progress_dialog = QProgressDialog(message, "Cancel" if with_cancel else None, 0, 0, self)
+        progress_dialog.setWindowTitle("Please Wait - NMEA Receiver")
+        progress_dialog.setWindowModality(Qt.WindowModality.ApplicationModal)
+        progress_dialog.setMinimumDuration(500)
+        progress_dialog.setMinimumWidth(350)
+
+        progress_bar = progress_dialog.findChild(QProgressBar)
+        if progress_bar:
+            progress_bar.setTextVisible(False)
+            progress_bar.setMaximum(0)
+            progress_bar.setMinimumHeight(15)
+
+        if not with_cancel:
+            cancel_button = progress_dialog.findChild(QPushButton)
+            if cancel_button:
+                cancel_button.hide()
+
+        return progress_dialog
+
     def start_upload(self):
-        """Memulai service upload dengan progress indicator"""
-        # Tampilkan progress dialog
-        self.progress_dialog = QProgressDialog("Starting upload service...", None, 0, 0, self)
-        self.progress_dialog.setWindowTitle("Please Wait")
-        self.progress_dialog.setWindowModality(Qt.WindowModality.WindowModal)
-        self.progress_dialog.setCancelButton(None)
+        """Memulai service upload dengan progress indicator yang lebih baik"""
+        self.progress_dialog = self.create_progress_dialog("Starting upload service...", with_cancel=True)
         self.progress_dialog.show()
+
         self.stop_upload_event.clear()
         worker = Worker(self.run_upload_service)
         worker.signals.finished.connect(self.on_upload_service_started)
@@ -242,8 +262,10 @@ class AISViewer(QMainWindow):
 
     def on_upload_service_started(self):
         """Callback ketika upload service berhasil dimulai"""
-        self.progress_dialog.close()
+        if hasattr(self, 'progress_dialog') and self.progress_dialog:
+            self.progress_dialog.close()
         self.UploadLabel.setText("Upload: Running")
+        self.UploadLabel.setStyleSheet("QLabel { color: green; font-weight: bold; }")
         self.statusbar.showMessage('Upload Service Started', self.STATUS_MESSAGE_TIMEOUT)
 
     def stop_upload(self):
@@ -259,10 +281,7 @@ class AISViewer(QMainWindow):
     def start_receiver(self):
         """Menjalankan penerima AIS di thread terpisah dengan progress indicator"""
         if not self.receiver_threads:
-            self.progress_dialog = QProgressDialog("Starting receiver service...", None, 0, 0, self)
-            self.progress_dialog.setWindowTitle("Please Wait")
-            self.progress_dialog.setWindowModality(Qt.WindowModality.WindowModal)
-            self.progress_dialog.setCancelButton(None)
+            self.progress_dialog = self.create_progress_dialog("Starting receiver service...")
             self.progress_dialog.show()
             self.stop_receiver_event.clear()
             worker = Worker(self.run_receiver_thread)
@@ -283,10 +302,7 @@ class AISViewer(QMainWindow):
     def stop_receiver(self):
         """Menghentikan penerima AIS dengan progress indicator"""
         if self.receiver_threads:
-            self.progress_dialog = QProgressDialog("Stopping receiver service...", None, 0, 0, self)
-            self.progress_dialog.setWindowTitle("Please Wait")
-            self.progress_dialog.setWindowModality(Qt.WindowModality.WindowModal)
-            self.progress_dialog.setCancelButton(None)
+            self.progress_dialog = self.create_progress_dialog("Stopping receiver service...")
             self.progress_dialog.show()
             self.stop_receiver_event.set()
             worker = Worker(self.clean_receiver_threads)
@@ -314,10 +330,7 @@ class AISViewer(QMainWindow):
     def start_sender(self):
         """Menjalankan pengiriman AIS ke OpenCPN di thread terpisah"""
         if self.sender_thread is None or not self.sender_thread.is_alive():
-            self.progress_dialog = QProgressDialog("Starting sender service...", None, 0, 0, self)
-            self.progress_dialog.setWindowTitle("Please Wait")
-            self.progress_dialog.setWindowModality(Qt.WindowModality.WindowModal)
-            self.progress_dialog.setCancelButton(None)
+            self.progress_dialog = self.create_progress_dialog("Starting sender service...")
             self.progress_dialog.show()
             self.stop_sender_event.clear()
             worker = Worker(self.run_sender)
@@ -345,17 +358,35 @@ class AISViewer(QMainWindow):
         self.SenderLabel.setText("Sender: Running")
         self.statusbar.showMessage('Sender Started', self.STATUS_MESSAGE_TIMEOUT)
 
+    def clean_sender_thread(self):
+        """Worker function untuk membersihkan thread sender"""
+        if self.sender_thread:
+            self.sender_thread.join(timeout=5)
+        return True
+
+    def on_sender_service_stopped(self):
+        """Callback ketika sender service berhasil dihentikan"""
+        if hasattr(self, 'progress_dialog') and self.progress_dialog:
+            self.progress_dialog.close()
+
+        self.actionRun_Sender_OpenCPN.setEnabled(True)
+        self.actionStop_Sender_OpenCPN.setEnabled(False)
+        self.run_sender_action.setEnabled(True)
+        self.stop_sender_action.setEnabled(False)
+        self.toggleSender = False
+        self.SenderLabel.setText("Sender: Stopped")
+        self.SenderLabel.setStyleSheet("QLabel { color: black; }")
+        self.statusbar.showMessage('Sender Stopped', self.STATUS_MESSAGE_TIMEOUT)
+
     def stop_sender(self):
         """Menghentikan pengiriman AIS ke OpenCPN"""
         if self.sender_thread and self.sender_thread.is_alive():
+            self.progress_dialog = self.create_progress_dialog("Stopping sender service...")
+            self.progress_dialog.show()
             self.stop_sender_event.set()
-            self.actionRun_Sender_OpenCPN.setEnabled(True)
-            self.actionStop_Sender_OpenCPN.setEnabled(False)
-            self.run_sender_action.setEnabled(True)
-            self.stop_sender_action.setEnabled(False)
-            self.toggleSender = False
-            self.SenderLabel.setText("Sender: Stopped")
-            self.statusbar.showMessage('Sender Stopped', self.STATUS_MESSAGE_TIMEOUT)
+            worker = Worker(self.clean_sender_thread)
+            worker.signals.finished.connect(self.on_sender_service_stopped)
+            self.threadpool.start(worker)
 
     def closeEvent(self, event):
         """Menangani event ketika jendela utama ditutup"""
