@@ -13,5 +13,4 @@ if __name__ == "__main__":
     QApplication.setWindowIcon(QIcon("Assets/logo_ipm.png"))
     window = AISViewer()
     window.show()
-    window.start_receiver()
     sys.exit(app.exec())

@@ -1,28 +1,35 @@
 import sys
 import threading
+from datetime import datetime
+
+from PyQt6.QtCore import QThread, QTimer
 from PyQt6.QtGui import QStandardItemModel, QStandardItem, QIcon, QFont
 from PyQt6.QtWidgets import QApplication, QMainWindow, QDialog, QSystemTrayIcon, QMenu, QLabel
 from PyQt6.uic import loadUi
-from Untils.path_helper import get_resource_path
 
+from Untils.logging_helper import error_file_logger
+from Untils.path_helper import get_resource_path
 
 from Services import sender, receiver
 from Pages.Config_page import ConfigureWindow
 from Pages.Connection_page import ConnectionWindow
-from Services.SignalsMessages import signalsLogger
+from Services.SignalsMessages import signalsLogger, signalsError, signalsInfo
 from Services.uploader import send_batch_data
+
+from Workers.upload_worker import UploadWorker
+from Workers.receiver_worker import ReceiverWorker
+from Workers.sender_worker import SenderWorker
+
 
 class AISViewer(QMainWindow):
     def __init__(self):
         super().__init__()
         icon = QIcon(get_resource_path("Assets/logo_ipm.png"))
         self.setWindowIcon(icon)
-        self.receiver_threads = []
-        self.toggleReceiver = False
-        self.toggleSender = False
         self.stop_receiver_event = threading.Event()
         self.stop_sender_event = threading.Event()
         self.stop_upload_event = threading.Event()
+        self.max_log_lines = 50
 
         # Muat file .ui menggunakan loadUi dari PyQt6
         ui_path = get_resource_path("UI/main.ui")
@@ -64,7 +71,6 @@ class AISViewer(QMainWindow):
         self.stop_sender_action.triggered.connect(self.stop_sender)
         self.exit_action.triggered.connect(self.exit)
 
-
         # Hubungkan tombol "Exit" ke fungsi exit
         self.actionExit.triggered.connect(self.exit)
         self.actionConfigure.triggered.connect(self.showConfigure)
@@ -86,102 +92,145 @@ class AISViewer(QMainWindow):
         self.statusbar.addPermanentWidget(self.UploadLabel)
 
         # Muat data awal
-        self.list_model_logger = QStandardItemModel(self)
-        self.listViewLogger.setModel(self.list_model_logger)
         self.labelInfo.setText("AIS Viewer")
-        signalsLogger.new_data_received.connect(self.update_log)
+        signalsLogger.new_data_received.connect(self.update_logger)
+        signalsError.new_data_received.connect(self.update_error)
+        signalsInfo.new_data_received.connect(self.update_info)
         self.start_upload()
+        QTimer.singleShot(0, self.start_receiver)
 
-    def update_log(self, message):
-        item = QStandardItem(message)
-        self.list_model.appendRow(item)
+        self.error_buffer = []
+        self.error_timer = QTimer()
+        self.error_timer.setInterval(1000)
+        self.error_timer.timeout.connect(self.flush_error_buffer)
+        self.error_timer.start()
+
+    def update_logger(self, message):
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        full_message = f"{timestamp} - {message}"
+        self.plainTextLogger.appendPlainText(full_message)
 
         emoji_font = QFont("Noto Color Emoji")
         emoji_font.setPointSize(10)
-        item.setFont(emoji_font)
+        self.plainTextLogger.setFont(emoji_font)
 
-        # Auto-scroll ke item terbaru
-        self.listViewLogger.scrollToBottom()
+        # Batasi jumlah baris
+        if self.plainTextLogger.blockCount() > self.max_log_lines:
+            # Ambil teks, hapus baris pertama
+            current_text = self.plainTextLogger.toPlainText()
+            new_text = '\n'.join(current_text.split('\n')[1:])
+            self.plainTextLogger.setPlainText(new_text)
+
+        # Scroll ke bawah
+        self.plainTextLogger.verticalScrollBar().setValue(
+            self.plainTextLogger.verticalScrollBar().maximum()
+        )
+
+    def update_error(self, message):
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        full_message = f"{timestamp} - {message}"
+        self.plainTextError.appendPlainText(full_message)
+
+        emoji_font = QFont("Noto Color Emoji")
+        emoji_font.setPointSize(10)
+        self.plainTextError.setFont(emoji_font)
+
+        # Batasi jumlah baris
+        if self.plainTextError.blockCount() > self.max_log_lines:
+            # Ambil teks, hapus baris pertama
+            current_text = self.plainTextError.toPlainText()
+            new_text = '\n'.join(current_text.split('\n')[1:])
+            self.plainTextError.setPlainText(new_text)
+
+        # Scroll ke bawah
+        self.plainTextError.verticalScrollBar().setValue(
+            self.plainTextError.verticalScrollBar().maximum()
+        )
+
+        self.error_buffer.append(message)
+
+    def flush_error_buffer(self):
+        for msg in self.error_buffer:
+            error_file_logger.error(msg)
+        self.error_buffer.clear()
+
+
+    def update_info(self, message):
+        self.labelInfo.setText(message)
+
 
     def start_upload(self):
         self.UploadLabel.setText("Upload: Running")
-        upload_thread = threading.Thread(target=send_batch_data, args=(self.stop_upload_event,), daemon=True)
-        upload_thread.start()
+        self.upload_worker = UploadWorker(self.stop_upload_event)
+        self.upload_worker.start()
+
 
     def stop_upload(self):
         self.UploadLabel.setText("Upload: Stopped")
         self.stop_upload_event.set()
 
-    def run_receiver_thread(self):
-        """Wrapper untuk menjalankan receiver di thread"""
-        self.receiver_threads = receiver.start_multi_receiver(self.stop_receiver_event)
 
     def start_receiver(self):
-        """Menjalankan penerima AIS di thread terpisah"""
-        if not self.receiver_threads:
+        if not hasattr(self, 'receiver_worker') or not self.receiver_worker.isRunning():
             self.stop_receiver_event.clear()
-            self.stop_receiver_event = threading.Event()  # Buat stop event di awal
-            receiver_thread = threading.Thread(target=self.run_receiver_thread, daemon=True)
-            receiver_thread.start()
+            self.receiver_worker = ReceiverWorker(self.stop_receiver_event)
+            self.receiver_worker.start()
             self.actionRun_Receiver.setEnabled(False)
             self.actionStop_Receiver.setEnabled(True)
             self.run_receiver_action.setEnabled(False)
             self.stop_receiver_action.setEnabled(True)
-            self.toggleReceiver = True
             self.ReceiverLabel.setText("Receiver: Running")
             self.statusbar.showMessage('Receiver Started', 5000)
 
-    def stop_receiver(self):
-        """Menghentikan penerima AIS"""
-        if self.receiver_threads:
-            self.stop_receiver_event.set()  # Kirim sinyal untuk berhenti
-            for thread in self.receiver_threads:
-                thread.join(timeout=5)  # Tunggu semua thread selesai
 
-            self.receiver_threads = []  # Kosongkan daftar thread
+    def stop_receiver(self):
+        if hasattr(self, 'receiver_worker') and self.receiver_worker and self.receiver_worker.isRunning():
+            self.stop_receiver_event.set()
+            self.receiver_worker.quit()
+            self.receiver_worker.wait()
+            self.receiver_worker = None
             self.actionRun_Receiver.setEnabled(True)
             self.actionStop_Receiver.setEnabled(False)
             self.run_receiver_action.setEnabled(True)
             self.stop_receiver_action.setEnabled(False)
-            self.toggleReceiver = False
             self.ReceiverLabel.setText("Receiver: Stopped")
             self.statusbar.showMessage('Receiver Stopped', 5000)
 
+
     def start_sender(self):
-        """Menjalankan pengiriman AIS ke OpenCPN di thread terpisah"""
-        if self.sender_thread is None or not self.sender_thread.is_alive():
+        if not hasattr(self, 'sender_worker') or not self.sender_worker.isRunning():
             self.stop_sender_event.clear()
-            self.sender_thread = threading.Thread(target=self.run_sender, daemon=True)
-            self.sender_thread.start()
+            self.sender_worker = SenderWorker(self.stop_sender_event)
+            self.sender_worker.start()
             self.actionRun_Sender_OpenCPN.setEnabled(False)
             self.actionStop_Sender_OpenCPN.setEnabled(True)
             self.run_sender_action.setEnabled(False)
             self.stop_sender_action.setEnabled(True)
-            self.toggleSender = True
             self.SenderLabel.setText("Sender: Running")
             self.statusbar.showMessage('Sender Started', 5000)
 
-    def run_sender(self):
-        """Fungsi wrapper untuk menjalankan sender dengan event stop"""
-        sender.send_ais_data(self.stop_sender_event)
-
     def stop_sender(self):
-        """Menghentikan pengiriman AIS ke OpenCPN"""
-        if self.sender_thread and self.sender_thread.is_alive():
-            self.stop_sender_event.set()  # Kirim sinyal untuk berhenti
+        if hasattr(self, 'sender_worker') and self.sender_worker is not None:
+            if self.sender_worker.isRunning():
+                self.stop_sender_event.set()
+                self.sender_worker.quit()
+                self.sender_worker.wait()
+            self.sender_worker = None
             self.actionRun_Sender_OpenCPN.setEnabled(True)
             self.actionStop_Sender_OpenCPN.setEnabled(False)
             self.run_sender_action.setEnabled(True)
             self.stop_sender_action.setEnabled(False)
-            self.toggleSender = False
             self.SenderLabel.setText("Sender: Stopped")
             self.statusbar.showMessage('Sender Stopped', 5000)
+
 
     def closeEvent(self, event):
         """Menangani event ketika jendela utama ditutup"""
         event.ignore()
         self.hide()
-        self.tray_icon.showMessage("NMEA Receiver IPM", "Aplikasi masih berjalan di system tray.", QSystemTrayIcon.MessageIcon.Information)
+        self.tray_icon.showMessage("NMEA Receiver IPM", "Aplikasi masih berjalan di system tray.",
+                                   QSystemTrayIcon.MessageIcon.Information)
+
 
     def tray_icon_clicked(self, reason):
         """Menampilkan jendela utama ketika ikon tray diklik"""
@@ -190,11 +239,13 @@ class AISViewer(QMainWindow):
             self.raise_()
             self.activateWindow()
 
+
     def open_app_clicked(self):
         """Menampilkan jendela utama diklik"""
         self.show()
         self.raise_()
         self.activateWindow()
+
 
     def exit(self):
         """Menutup aplikasi sepenuhnya"""
@@ -204,6 +255,7 @@ class AISViewer(QMainWindow):
         self.tray_icon.hide()
         QApplication.quit()
 
+
     def showConfigure(self):
         """Menampilkan jendela konfigurasi"""
         self.stop_receiver()
@@ -211,6 +263,7 @@ class AISViewer(QMainWindow):
         dlg = ConfigureWindow(self)
         dlg.data_saved.connect(self.start_upload)
         dlg.exec()
+
 
     def showConnection(self):
         """Menampilkan jendela koneksi"""

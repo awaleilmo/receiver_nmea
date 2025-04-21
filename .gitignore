@@ -8,6 +8,7 @@ build
 /build_linux/SeaScope_Receiver
 /build_linux/appimagetool
 dist
+logs
 *.spec
 *.AppImage
 nmea_data.db
