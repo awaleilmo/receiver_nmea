@@ -25,7 +25,7 @@ def try_decode(payload):
                 return decoded_messages[0], version  # Ambil pesan pertama jika list
             return decoded_messages, version  # Jika bukan list, gunakan apa adanya
         except Exception as e:
-            print(f"⚠️ Gagal decode dengan versi {version}: {e}")
+            continue
     return None, None  # Jika semua gagal, kembalikan None
 
 
@@ -43,14 +43,11 @@ def decode_ais(nmea_sentence):
 
             unique_key = f"{message_id}_{channel}"
 
-            # Jika hanya 1 fragment, langsung decode
             if fragment_count == 1:
                 decoded_data, version = try_decode(payload)
                 if not decoded_data:
-                    print(f"❌ Gagal decode AIS: {nmea_sentence}")
-                    return None  # Jangan print error untuk mempersingkat output
+                    return None
 
-                # Tambahkan metadata dari NMEA jika hasilnya dictionary
                 if isinstance(decoded_data, dict):
                     decoded_data["channel"] = channel
                     decoded_data["message_id"] = message_id
@@ -77,8 +74,7 @@ def decode_ais(nmea_sentence):
                     decoded_data, version = try_decode(full_payload)
 
                     if not decoded_data:
-                        print(f"❌ Gagal decode AIS setelah gabung: {full_payload}")
-                        return None  # Jangan print error untuk mempersingkat output
+                        return None
 
                     if isinstance(decoded_data, dict):
                         decoded_data["channel"] = channel
@@ -88,8 +84,7 @@ def decode_ais(nmea_sentence):
                     return decoded_data
 
                 except Exception as e:
-                    print(f"❌ Error decoding AIS after merge: {e}")
-                    return None  # Jangan print error
+                    return None
 
             # **Tambahkan mekanisme timeout (5 detik)**
             if time.time() - ais_buffer_time.get(unique_key , 0) > 60:
@@ -101,9 +96,8 @@ def decode_ais(nmea_sentence):
             return None  # Fragment belum lengkap, tunggu dulu
 
         else:
-            return None  # Jangan print error
+            return None
 
 
     except Exception as e:
-        print(f"❌ Error decoding AIS data: {e}")
-        return None  # Jangan print error
+        return None

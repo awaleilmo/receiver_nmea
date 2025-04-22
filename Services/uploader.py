@@ -48,6 +48,6 @@ def send_batch_data(stop_event):
                 signalsWarning.new_data_received.emit(f"⚠️ Gagal mengirim data: {response.status_code} - {response.text}")
 
         except requests.exceptions.RequestException as e:
-            signalsError.new_data_received.emit(f"🚨 Koneksi ke API gagal: {e}")
+            signalsError.new_data_received.emit(f"🚨 Koneksi ke API gagal")
 
         time.sleep(timerSleep)  # Kirim data setiap 30 detik

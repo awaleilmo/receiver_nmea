@@ -111,7 +111,7 @@ class AISViewer(QMainWindow):
         status_widget = QWidget()
         status_layout = QHBoxLayout(status_widget)
         status_layout.setContentsMargins(0, 0, 0, 0)
-        status_layout.setSpacing(20)
+        status_layout.setSpacing(5)
 
         self.ReceiverLabel = QLabel("Receiver: Stopped")
         self.SenderLabel = QLabel("Sender: Stopped")
