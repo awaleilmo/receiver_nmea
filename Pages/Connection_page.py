@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import QDialog, QGroupBox, QGridLayout, QVBoxLayout, QWidget, QCheckBox, QLabel, QDialogButtonBox
 from PyQt6.QtGui import QStandardItemModel, QStandardItem, QFont
 from PyQt6.uic import loadUi
-from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtCore import pyqtSignal, QTimer
 from Controllers.Connection_controller import get_connection, update_connection_status, delete_connection
 from Pages.Add_Connection_page import AddConnectionWindow
 from Untils.path_helper import get_resource_path
@@ -9,6 +9,7 @@ from Untils.path_helper import get_resource_path
 
 class ConnectionWindow(QDialog):
     data_saved = pyqtSignal()
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.selected_group = None
@@ -39,7 +40,6 @@ class ConnectionWindow(QDialog):
         font = QFont()
         font.setPointSize(9)
         font.setBold(True)
-
 
         if not data:
             print("Tidak ada data yang ditemukan.")
@@ -140,11 +140,25 @@ class ConnectionWindow(QDialog):
         self.connection_checkboxes[connection_id].setChecked(state)
 
     def save_changes(self):
-        for conn_id, checkbox in self.connection_checkboxes.items():
-            new_status = 1 if checkbox.isChecked() else 0
-            update_connection_status(conn_id, new_status)
+        try:
+            for conn_id, checkbox in self.connection_checkboxes.items():
+                try:
+                    new_status = 1 if checkbox.isChecked() else 0
+                    update_connection_status(conn_id, new_status)
+                except Exception as e:
+                    from Services.SignalsMessages import signalsError
+                    error_msg = f"Error updating connection {conn_id}: {str(e)}"
+                    signalsError.new_data_received.emit(error_msg)
+                    print(error_msg)
+
             self.data_saved.emit()
-        print("Perubahan telah disimpan.")
+            print("Perubahan telah disimpan.")
+
+        except Exception as e:
+            from Services.SignalsMessages import signalsError
+            error_msg = f"Error saving changes: {str(e)}"
+            signalsError.new_data_received.emit(error_msg)
+            print(error_msg)
 
     def AddConnectionWindow(self):
         add_connection_window = AddConnectionWindow(self)
@@ -157,7 +171,7 @@ class ConnectionWindow(QDialog):
             return
 
         connection_data = {
-           "id": self.selected_group.property("connection_id"),
+            "id": self.selected_group.property("connection_id"),
             "name": self.selected_group.property("name"),
             "type": self.selected_group.property("type"),
             "data_port": self.selected_group.property("data_port"),
@@ -177,6 +191,43 @@ class ConnectionWindow(QDialog):
             print("Tidak ada group yang dipilih.")
             return
 
-        connection_id = self.selected_group.property("connection_id")
-        delete_connection(connection_id)
-        self.load_data()
+        try:
+            connection_id = self.selected_group.property("connection_id")
+
+            #tutup connection
+            try:
+                connections = get_connection()
+                for conn in connections:
+                    if conn["id"] == connection_id and conn.get("active", 0) == 1:
+                        update_connection_status(connection_id, 0)
+                        break
+            except Exception as e:
+                print(f"Warning when deactivating: {e}")
+
+            # Hpaus Checkbox
+            if connection_id in self.connection_checkboxes:
+                del self.connection_checkboxes[connection_id]
+
+            temp_group = self.selected_group
+            self.selected_group = None
+            self.edit_button.setEnabled(False)
+            self.remove_button.setEnabled(False)
+            self.add_button.setEnabled(True)
+
+            try:
+                delete_connection(connection_id)
+                print(f"Delete connection {connection_id} successful.")
+            except Exception as e:
+                from Services.SignalsMessages import signalsError
+                error_msg = f"Error saat menghapus koneksi dari database: {str(e)}"
+                signalsError.new_data_received.emit(error_msg)
+                print(error_msg)
+
+            self.load_data()
+            print("delete ccc1123")
+
+        except Exception as e:
+            from Services.SignalsMessages import signalsError
+            error_msg = f"Error saat menghapus koneksi: {str(e)}"
+            signalsError.new_data_received.emit(error_msg)
+            print(error_msg)
