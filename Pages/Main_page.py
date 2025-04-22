@@ -166,22 +166,19 @@ class AISViewer(QMainWindow):
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         full_message = f"{timestamp} - {message}"
 
-        # Set emoji font
         emoji_font = QFont("Noto Color Emoji")
         emoji_font.setPointSize(10)
         self.plainTextLogger.setFont(emoji_font)
 
-        # Add message to log
         self.plainTextLogger.appendPlainText(full_message)
 
-        # Limit number of lines
+        # Limit untuk tidak terlalu banyak
         if self.plainTextLogger.blockCount() > self.MAX_LOG_ITEMS:
-            # Get text, remove first line
             current_text = self.plainTextLogger.toPlainText()
             new_text = '\n'.join(current_text.split('\n')[1:])
             self.plainTextLogger.setPlainText(new_text)
 
-        # Scroll to bottom
+
         self.plainTextLogger.verticalScrollBar().setValue(
             self.plainTextLogger.verticalScrollBar().maximum()
         )
@@ -195,23 +192,13 @@ class AISViewer(QMainWindow):
         emoji_font = QFont("Noto Color Emoji")
         emoji_font.setPointSize(10)
         self.plainTextError.setFont(emoji_font)
-
-        # Add message to error log
         self.plainTextError.appendPlainText(error_message)
-
-        # Also add to main log
         self.update_logger(f"🚨 ERROR: {message}")
-
-        # Add to error buffer for file logging
         self.error_buffer.append(message)
-
-        # Limit number of lines
         if self.plainTextError.blockCount() > self.MAX_LOG_ITEMS:
             current_text = self.plainTextError.toPlainText()
             new_text = '\n'.join(current_text.split('\n')[1:])
             self.plainTextError.setPlainText(new_text)
-
-        # Scroll to bottom
         self.plainTextError.verticalScrollBar().setValue(
             self.plainTextError.verticalScrollBar().maximum()
         )
@@ -219,7 +206,6 @@ class AISViewer(QMainWindow):
     def update_info(self, message):
         """Update log with info message"""
         self.update_logger(f"ℹ️ INFO: {message}")
-        # Also update the info label
         self.labelInfo.setText(message)
 
     def update_warning(self, message):
@@ -285,7 +271,6 @@ class AISViewer(QMainWindow):
             self.ReceiverLabel.setText("Receiver: Running")
             self.ReceiverLabel.setStyleSheet("QLabel { color: green; font-weight: bold; }")
 
-            # Close progress dialog after a short delay
             QTimer.singleShot(1000, progress_dialog.close)
             self.statusbar.showMessage('Receiver Started', self.STATUS_MESSAGE_TIMEOUT)
 
@@ -308,7 +293,6 @@ class AISViewer(QMainWindow):
             self.ReceiverLabel.setText("Receiver: Stopped")
             self.ReceiverLabel.setStyleSheet("")
 
-            # Close progress dialog after a short delay
             QTimer.singleShot(1000, progress_dialog.close)
             self.statusbar.showMessage('Receiver Stopped', self.STATUS_MESSAGE_TIMEOUT)
 
@@ -330,7 +314,6 @@ class AISViewer(QMainWindow):
             self.SenderLabel.setText("Sender: Running")
             self.SenderLabel.setStyleSheet("QLabel { color: green; font-weight: bold; }")
 
-            # Close progress dialog after a short delay
             QTimer.singleShot(1000, progress_dialog.close)
             self.statusbar.showMessage('Sender Started', self.STATUS_MESSAGE_TIMEOUT)
 
@@ -353,7 +336,6 @@ class AISViewer(QMainWindow):
             self.SenderLabel.setText("Sender: Stopped")
             self.SenderLabel.setStyleSheet("")
 
-            # Close progress dialog after a short delay
             QTimer.singleShot(1000, progress_dialog.close)
             self.statusbar.showMessage('Sender Stopped', self.STATUS_MESSAGE_TIMEOUT)
 
