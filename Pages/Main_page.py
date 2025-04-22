@@ -4,9 +4,8 @@ from datetime import datetime
 from PyQt6.QtCore import Qt, QThread, QTimer, QSettings
 from PyQt6.QtGui import QIcon, QFont
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QSystemTrayIcon, QMenu, QLabel,
-                             QHBoxLayout, QWidget, QFrame, QProgressDialog, QProgressBar)
+                             QHBoxLayout, QWidget, QFrame, QProgressDialog, QProgressBar, QPushButton)
 from PyQt6.uic import loadUi
-from PySide6.QtWidgets import QPushButton
 
 from Pages.Config_page import ConfigureWindow
 from Pages.Connection_page import ConnectionWindow
@@ -48,9 +47,6 @@ class AISViewer(QMainWindow):
         self.receiver_worker = None
         self.sender_worker = None
         self.upload_worker = None
-
-        self.toggleReceiver = False
-        self.toggleSender = False
 
         self.stop_receiver_event = threading.Event()
         self.stop_sender_event = threading.Event()
@@ -193,7 +189,6 @@ class AISViewer(QMainWindow):
         emoji_font.setPointSize(10)
         self.plainTextError.setFont(emoji_font)
         self.plainTextError.appendPlainText(error_message)
-        self.update_logger(f"🚨 ERROR: {message}")
         self.error_buffer.append(message)
         if self.plainTextError.blockCount() > self.MAX_LOG_ITEMS:
             current_text = self.plainTextError.toPlainText()
@@ -267,7 +262,6 @@ class AISViewer(QMainWindow):
             self.actionStop_Receiver.setEnabled(True)
             self.run_receiver_action.setEnabled(False)
             self.stop_receiver_action.setEnabled(True)
-            self.toggleReceiver = True
             self.ReceiverLabel.setText("Receiver: Running")
             self.ReceiverLabel.setStyleSheet("QLabel { color: green; font-weight: bold; }")
 
@@ -289,7 +283,7 @@ class AISViewer(QMainWindow):
             self.actionStop_Receiver.setEnabled(False)
             self.run_receiver_action.setEnabled(True)
             self.stop_receiver_action.setEnabled(False)
-            self.toggleReceiver = False
+
             self.ReceiverLabel.setText("Receiver: Stopped")
             self.ReceiverLabel.setStyleSheet("")
 
@@ -310,7 +304,7 @@ class AISViewer(QMainWindow):
             self.actionStop_Sender_OpenCPN.setEnabled(True)
             self.run_sender_action.setEnabled(False)
             self.stop_sender_action.setEnabled(True)
-            self.toggleSender = True
+
             self.SenderLabel.setText("Sender: Running")
             self.SenderLabel.setStyleSheet("QLabel { color: green; font-weight: bold; }")
 
@@ -332,7 +326,7 @@ class AISViewer(QMainWindow):
             self.actionStop_Sender_OpenCPN.setEnabled(False)
             self.run_sender_action.setEnabled(True)
             self.stop_sender_action.setEnabled(False)
-            self.toggleSender = False
+
             self.SenderLabel.setText("Sender: Stopped")
             self.SenderLabel.setStyleSheet("")
 
@@ -377,23 +371,15 @@ class AISViewer(QMainWindow):
         QApplication.quit()
 
     def showConfigure(self):
-        """Show configuration window with handling for service restart"""
-        was_receiver_running = self.toggleReceiver
         self.stop_receiver()
         self.stop_upload()
         dlg = ConfigureWindow(self)
         dlg.data_saved.connect(self.start_upload)
-        if was_receiver_running:
-            dlg.data_saved.connect(self.start_receiver)
-
+        dlg.data_saved.connect(self.start_receiver)
         dlg.exec()
 
     def showConnection(self):
-        """Show connection window with handling for service restart"""
-        was_receiver_running = self.toggleReceiver
         self.stop_receiver()
         dlg = ConnectionWindow(self)
-        if was_receiver_running:
-            dlg.data_saved.connect(self.start_receiver)
-
+        dlg.data_saved.connect(self.start_receiver)
         dlg.exec()
