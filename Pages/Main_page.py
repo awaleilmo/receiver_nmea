@@ -4,7 +4,7 @@ from datetime import datetime
 from PyQt6.QtCore import Qt, QThread, QTimer, QSettings
 from PyQt6.QtGui import QIcon, QFont
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QSystemTrayIcon, QMenu, QLabel,
-                             QHBoxLayout, QWidget, QFrame, QProgressDialog, QProgressBar, QPushButton)
+                             QHBoxLayout, QWidget, QFrame, QProgressDialog, QProgressBar)
 from PyQt6.uic import loadUi
 
 from Pages.Config_page import ConfigureWindow
@@ -208,9 +208,9 @@ class AISViewer(QMainWindow):
         """Update log with warning message"""
         self.update_logger(f"⚠️ WARNING: {message}")
 
-    def create_progress_dialog(self, message, with_cancel=False):
+    def create_progress_dialog(self, message):
         """Helper method to create progress dialog with consistent look"""
-        progress_dialog = QProgressDialog(message, "Cancel" if with_cancel else None, 0, 0, self)
+        progress_dialog = QProgressDialog(message, None, 0, 0, self)
         progress_dialog.setWindowTitle("Please Wait - NMEA Receiver")
         progress_dialog.setWindowModality(Qt.WindowModality.ApplicationModal)
         progress_dialog.setMinimumDuration(500)
@@ -221,11 +221,6 @@ class AISViewer(QMainWindow):
             progress_bar.setTextVisible(False)
             progress_bar.setMaximum(0)
             progress_bar.setMinimumHeight(15)
-
-        if not with_cancel:
-            cancel_button = progress_dialog.findChild(QPushButton)
-            if cancel_button:
-                cancel_button.hide()
 
         return progress_dialog
 
