@@ -131,7 +131,7 @@ class AISViewer(QMainWindow):
         status_layout.addWidget(self.UploadLabel)
         status_layout.addStretch(1)
 
-        self.statusbar.addPermanentWidget(status_widget, 1)
+        self.statusbar.addPermanentWidget(status_widget, 0)
 
     def setup_error_logging(self):
         """Setup error logging with buffer and timer"""
