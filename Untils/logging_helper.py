@@ -6,7 +6,7 @@ os.makedirs("logs", exist_ok=True)
 error_file_logger = logging.getLogger("AisErrorLogger")
 error_file_logger.setLevel(logging.ERROR)
 
-file_handler = logging.FileHandler("logs/error.log")
+file_handler = logging.FileHandler("logs/error.log",encoding = 'utf-8')
 formatter = logging.Formatter('%(asctime)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 file_handler.setFormatter(formatter)
 
