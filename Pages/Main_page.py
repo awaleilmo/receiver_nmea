@@ -41,6 +41,7 @@ class AISViewer(QMainWindow):
         ui_path = get_resource_path("UI/main.ui")
         loadUi(ui_path, self)
         self.labelInfo.setText("AIS Viewer")
+        QTimer.singleShot(0, self.start_receiver)
 
     def setup_thread_management(self):
         """Setup thread management"""
