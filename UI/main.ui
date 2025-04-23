@@ -106,7 +106,7 @@
      <x>0</x>
      <y>0</y>
      <width>1048</width>
-     <height>23</height>
+     <height>33</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -139,6 +139,9 @@
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionExit">
+   <property name="icon">
+    <iconset theme="system-shutdown"/>
+   </property>
    <property name="text">
     <string>Exit</string>
    </property>
@@ -150,6 +153,9 @@
    </property>
   </action>
   <action name="actionConfigure">
+   <property name="icon">
+    <iconset theme="applications-development"/>
+   </property>
    <property name="text">
     <string>Configure</string>
    </property>
@@ -187,7 +193,7 @@
     <iconset theme="media-playback-start"/>
    </property>
    <property name="text">
-    <string>Run Sender OpenCPN</string>
+    <string>Run Sender</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+Shift+R</string>
@@ -201,13 +207,16 @@
     <iconset theme="media-playback-stop"/>
    </property>
    <property name="text">
-    <string>Stop Sender OpenCPN</string>
+    <string>Stop Sender</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+Shift+T</string>
    </property>
   </action>
   <action name="actionConnections">
+   <property name="icon">
+    <iconset theme="emblem-symbolic-link"/>
+   </property>
    <property name="text">
     <string>Connections</string>
    </property>

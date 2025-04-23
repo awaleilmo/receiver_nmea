@@ -5,7 +5,7 @@ import datetime
 
 Session = sessionmaker(bind=engine)
 
-def update_config(cpn_host, cpn_port, api_server):
+def update_config(api_server):
     session = Session()
     try:
         res = session.query(ConfigModel).first()
@@ -13,8 +13,6 @@ def update_config(cpn_host, cpn_port, api_server):
             print("No configuration data found! Update skipped.")
             return
 
-        res.cpn_host = cpn_host
-        res.cpn_port = cpn_port
         res.api_server = api_server
         session.commit()
         print("Configuration updated successfully!")
@@ -31,8 +29,6 @@ def get_config():
         res = session.query(ConfigModel).first()
         return {
             "id": res.id,
-            "cpn_host": res.cpn_host,
-            "cpn_port": res.cpn_port,
             "api_server": res.api_server
         }
     except Exception as e:

@@ -4,10 +4,13 @@ import datetime
 
 Base = declarative_base()
 
-class ConfigModel(Base):
-    __tablename__ = "config"
+class SenderModel(Base):
+    __tablename__ = "sender"
 
     id = Column(Integer, primary_key=True)
-    api_server = Column(String, nullable=True)
+    name = Column(String, nullable=True)
+    host = Column(String, nullable=True)
+    port = Column(String, nullable=True)
+    active = Column(Integer, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow())
     updated_at = Column(DateTime, default=datetime.datetime.utcnow())

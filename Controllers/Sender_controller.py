@@ -1,0 +1,91 @@
+from sqlalchemy.orm import sessionmaker
+from Models.__init__ import engine
+from Models.Sender_model import SenderModel
+import datetime
+
+Session = sessionmaker(bind=engine)
+
+
+def get_sender():
+    session = Session()
+    try:
+        data = session.query(SenderModel).all()
+        return [{
+            "id": res.id,
+            "name": res.name,
+            "host": res.host,
+            "port": res.port,
+            "active": res.active
+        } for res in data]
+    except Exception as e:
+        session.rollback()
+        print(f"Error: {e}")
+        raise e
+    finally:
+        session.close()
+
+
+def update_sender(identity, name, host, port):
+    session = Session()
+    try:
+        res = session.query(SenderModel).filter_by(id=identity).first()
+        if res is None:
+            print("No sender data found! Update skipped.")
+            return
+
+        res.name = name
+        res.host = host
+        res.port = port
+        session.commit()
+        print("Sender updated successfully!")
+    except Exception as e:
+        session.rollback()
+        print(f"Error: {e}")
+        raise e
+    finally:
+        session.close()
+
+def add_sender(name, host, port):
+    session = Session()
+    try:
+        new_sender = SenderModel(name=name, host=host, port=port)
+        session.add(new_sender)
+        session.commit()
+        print("Sender added successfully!")
+    except Exception as e:
+        session.rollback()
+        print(f"Error: {e}")
+        raise e
+    finally:
+        session.close()
+
+def remove_sender(identity):
+    session = Session()
+    try:
+        session.query(SenderModel).filter_by(id=identity).delete()
+        session.commit()
+        print("Sender removed successfully!")
+    except Exception as e:
+        session.rollback()
+        print(f"Error: {e}")
+        raise e
+    finally:
+        session.close()
+
+def update_sender_status(identity, active):
+    session = Session()
+    try:
+        res = session.query(SenderModel).filter_by(id=identity).first()
+        if res is None:
+            print("No sender data found! Update skipped.")
+            return
+
+        res.active = active
+        session.commit()
+        print("Sender status updated successfully!")
+    except Exception as e:
+        session.rollback()
+        print(f"Error: {e}")
+        raise e
+    finally:
+        session.close()
