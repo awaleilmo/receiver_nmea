@@ -1,4 +1,5 @@
-from PyQt6.QtWidgets import QDialog, QGroupBox, QGridLayout, QVBoxLayout, QWidget, QCheckBox, QLabel, QDialogButtonBox
+from PyQt6.QtWidgets import QDialog, QGroupBox, QGridLayout, QVBoxLayout, QWidget, QCheckBox, QLabel, QDialogButtonBox, \
+    QMessageBox
 from PyQt6.QtGui import QStandardItemModel, QStandardItem, QFont
 from PyQt6.uic import loadUi
 from PyQt6.QtCore import pyqtSignal, QTimer
@@ -36,89 +37,103 @@ class ConnectionWindow(QDialog):
             apply_button.clicked.connect(self.save_changes)
 
     def load_data(self):
-        data = get_connection()
-        font = QFont()
-        font.setPointSize(9)
-        font.setBold(True)
-
-        if not data:
-            print("Tidak ada data yang ditemukan.")
-            return
-
+        self.connection_checkboxes = {}
         while self.scroll_layout.count():
             item = self.scroll_layout.takeAt(0)
             if item.widget():
                 item.widget().deleteLater()
 
-        for con in data:
-            group_box = QGroupBox()
-            group_box.setStyleSheet("QGroupBox { border: 1px solid; border-radius: 5px; }")
-            group_box.setProperty("connection_id", con["id"])
-            group_box.setProperty("name", con["name"])
-            group_box.setProperty("type", con["type"])
-            group_box.setProperty("data_port", con["data_port"])
-            group_box.setProperty("baudrate", con["baudrate"])
-            group_box.setProperty("address", con["address"])
-            group_box.setProperty("port", con["port"])
-            group_box.setProperty("protocol", con["protocol"])
-            group_box.setProperty("network", con["network"])
-            layout = QGridLayout()
+        try:
+            data = get_connection()
+            font = QFont()
+            font.setPointSize(9)
+            font.setBold(True)
 
-            # parsing data
-            DType = QLabel(con["type"].upper())
-            DName = QLabel(con["name"].upper())
-            DDataPort = QLabel(con["data_port"])
-            DBaudrate = QLabel(str(con["baudrate"]))
+            if not data or len(data) == 0:
+                from Services.SignalsMessages import signalsInfo
+                signalsInfo.new_data_received.emit("Tidak ada data koneksi yang ditemukan.")
+                print("Tidak ada data yang ditemukan.")
+                self.edit_button.setEnabled(False)
+                self.remove_button.setEnabled(False)
+                self.add_button.setEnabled(True)
+                self.scroll_layout.addStretch()
+                return
+            #show dAta
+            for con in data:
+                group_box = QGroupBox()
+                group_box.setStyleSheet("QGroupBox { border: 1px solid; border-radius: 5px; }")
+                group_box.setProperty("connection_id", con["id"])
+                group_box.setProperty("name", con["name"])
+                group_box.setProperty("type", con["type"])
+                group_box.setProperty("data_port", con["data_port"])
+                group_box.setProperty("baudrate", con["baudrate"])
+                group_box.setProperty("address", con["address"])
+                group_box.setProperty("port", con["port"])
+                group_box.setProperty("protocol", con["protocol"])
+                group_box.setProperty("network", con["network"])
+                layout = QGridLayout()
 
-            DAddress = QLabel(con["address"])
-            DPort = QLabel(con["port"])
+                # parsing data
+                DType = QLabel(con["type"].upper())
+                DName = QLabel(con["name"].upper())
+                DDataPort = QLabel(con["data_port"])
+                DBaudrate = QLabel(str(con["baudrate"]))
 
-            for label in [DName, DType, DAddress, DPort, DBaudrate, DDataPort]:
-                label.setFont(font)
+                DAddress = QLabel(con["address"])
+                DPort = QLabel(con["port"])
 
-            # Checkbox enable
-            enable_checkbox = QCheckBox("Enable")
-            enable_checkbox.setChecked(bool(con["active"]))
-            enable_checkbox.stateChanged.connect(lambda state, cid=con["id"]: self.checkbox_changed(cid, state))
-            self.connection_checkboxes[con["id"]] = enable_checkbox
-            layout.addWidget(enable_checkbox, 0, 0)
+                for label in [DName, DType, DAddress, DPort, DBaudrate, DDataPort]:
+                    label.setFont(font)
 
-            # Label Data
-            layout.addWidget(QLabel("Name Connection"), 0, 1)
-            layout.addWidget(QLabel("Type"), 0, 2)
+                # Checkbox enable
+                enable_checkbox = QCheckBox("Enable")
+                enable_checkbox.setChecked(bool(con["active"]))
+                enable_checkbox.stateChanged.connect(lambda state, cid=con["id"]: self.checkbox_changed(cid, state))
+                self.connection_checkboxes[con["id"]] = enable_checkbox
+                layout.addWidget(enable_checkbox, 0, 0)
 
-            layout.addWidget(DName, 1, 1)
-            layout.addWidget(DType, 1, 2)
+                # Label Data
+                layout.addWidget(QLabel("Name Connection"), 0, 1)
+                layout.addWidget(QLabel("Type"), 0, 2)
 
-            if con["type"] == "network":
-                DProtocol = QLabel(f"{con['protocol'].upper()} {con['network'].upper()}")
-                DProtocol.setFont(font)
+                layout.addWidget(DName, 1, 1)
+                layout.addWidget(DType, 1, 2)
 
-                layout.addWidget(QLabel("Protocol"), 0, 3)
-                layout.addWidget(QLabel("Network Address"), 0, 4)
-                layout.addWidget(QLabel("Network Port"), 0, 5)
+                if con["type"] == "network":
+                    DProtocol = QLabel(f"{con['protocol'].upper()} {con['network'].upper()}")
+                    DProtocol.setFont(font)
 
-                layout.addWidget(DProtocol, 1, 3)
-                layout.addWidget(DAddress, 1, 4)
-                layout.addWidget(DPort, 1, 5)
-            elif con["type"] == "serial":
-                DProtocol = QLabel(con["protocol"].upper())
-                DProtocol.setFont(font)
+                    layout.addWidget(QLabel("Protocol"), 0, 3)
+                    layout.addWidget(QLabel("Network Address"), 0, 4)
+                    layout.addWidget(QLabel("Network Port"), 0, 5)
 
-                layout.addWidget(QLabel("Protocol"), 0, 3)
-                layout.addWidget(QLabel("Serial Port"), 0, 4)
-                layout.addWidget(QLabel("Baudrate"), 0, 5)
+                    layout.addWidget(DProtocol, 1, 3)
+                    layout.addWidget(DAddress, 1, 4)
+                    layout.addWidget(DPort, 1, 5)
+                elif con["type"] == "serial":
+                    DProtocol = QLabel(con["protocol"].upper())
+                    DProtocol.setFont(font)
 
-                layout.addWidget(DProtocol, 1, 3)
-                layout.addWidget(DDataPort, 1, 4)
-                layout.addWidget(DBaudrate, 1, 5)
+                    layout.addWidget(QLabel("Protocol"), 0, 3)
+                    layout.addWidget(QLabel("Serial Port"), 0, 4)
+                    layout.addWidget(QLabel("Baudrate"), 0, 5)
 
-            # Tambahkan group box ke layout utama
-            group_box.setLayout(layout)
-            group_box.mousePressEvent = lambda event, gb=group_box: self.select_row(gb)
-            self.scroll_layout.addWidget(group_box)
+                    layout.addWidget(DProtocol, 1, 3)
+                    layout.addWidget(DDataPort, 1, 4)
+                    layout.addWidget(DBaudrate, 1, 5)
 
-        self.scroll_layout.addStretch()
+                # Tambahkan group box ke layout utama
+                group_box.setLayout(layout)
+                group_box.mousePressEvent = lambda event, gb=group_box: self.select_row(gb)
+                self.scroll_layout.addWidget(group_box)
+
+            self.scroll_layout.addStretch()
+        except Exception as e:
+            from Services.SignalsMessages import signalsError
+            error_msg = f"Error saat memuat data koneksi: {str(e)}"
+            signalsError.new_data_received.emit(error_msg)
+            print(error_msg)
+            self.scroll_layout.addStretch()
 
     def select_row(self, group_box):
         if self.selected_group == group_box:  # Jika sudah dipilih, batalkan pilihan
@@ -193,8 +208,28 @@ class ConnectionWindow(QDialog):
 
         try:
             connection_id = self.selected_group.property("connection_id")
+            connection_name = self.selected_group.property("name")
+            widget_to_remove = self.selected_group
+            widget_index = -1
 
-            #tutup connection
+            for i in range(self.scroll_layout.count()):
+                if self.scroll_layout.itemAt(i).widget() == widget_to_remove:
+                    widget_index = i
+                    break
+
+            # messagebox confirmation
+            confirm = QMessageBox.question(
+                self,
+                "Konfirmasi Penghapusan",
+                f"Apakah Anda yakin ingin menghapus koneksi '{connection_name}'?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No
+            )
+
+            if confirm != QMessageBox.StandardButton.Yes:
+                return
+
+            # Nonaktifkan koneksi jika aktif
             try:
                 connections = get_connection()
                 for conn in connections:
@@ -204,11 +239,10 @@ class ConnectionWindow(QDialog):
             except Exception as e:
                 print(f"Warning when deactivating: {e}")
 
-            # Hpaus Checkbox
+            # Reset UI state sebelum haups database
             if connection_id in self.connection_checkboxes:
                 del self.connection_checkboxes[connection_id]
 
-            temp_group = self.selected_group
             self.selected_group = None
             self.edit_button.setEnabled(False)
             self.remove_button.setEnabled(False)
@@ -218,16 +252,25 @@ class ConnectionWindow(QDialog):
                 delete_connection(connection_id)
                 print(f"Delete connection {connection_id} successful.")
             except Exception as e:
-                from Services.SignalsMessages import signalsError
-                error_msg = f"Error saat menghapus koneksi dari database: {str(e)}"
-                signalsError.new_data_received.emit(error_msg)
-                print(error_msg)
+                print(f"Error saat menghapus koneksi dari database: {str(e)}")
+                return
 
-            self.load_data()
-            print("delete ccc1123")
+            # Hpaus widget koneksi dari UI
+            if widget_index >= 0:
+                item = self.scroll_layout.takeAt(widget_index)
+                if item and item.widget():
+                    item.widget().deleteLater()
+
+            remaining_connections = 0
+            for i in range(self.scroll_layout.count()):
+                item = self.scroll_layout.itemAt(i)
+                if item and item.widget() and isinstance(item.widget(), QGroupBox):
+                    remaining_connections += 1
+
+            if remaining_connections == 0 and self.scroll_layout.count() == 0:
+                self.scroll_layout.addStretch()
+
+            self.data_saved.emit()
 
         except Exception as e:
-            from Services.SignalsMessages import signalsError
-            error_msg = f"Error saat menghapus koneksi: {str(e)}"
-            signalsError.new_data_received.emit(error_msg)
-            print(error_msg)
+            print(f"Error saat proses penghapusan koneksi: {str(e)}")
