@@ -8,7 +8,7 @@ from Untils.path_helper import get_resource_path
 
 
 class AddConnectionWindow(QDialog):
-    data_saved = pyqtSignal()
+    data_saved = pyqtSignal(str)
     def __init__(self, parent=None, connection_data=None):
         super().__init__(parent)
         ui_path = get_resource_path("UI/add_connection.ui")
@@ -127,5 +127,5 @@ class AddConnectionWindow(QDialog):
         else:
             save_connection(name, types, data_port, baudrate, protocol, network, address, port, active)
 
-        self.data_saved.emit()
+        self.data_saved.emit("Connection Save")
         self.close()

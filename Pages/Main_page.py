@@ -3,8 +3,9 @@ from datetime import datetime
 
 from PyQt6.QtCore import Qt, QThread, QTimer, QSettings
 from PyQt6.QtGui import QIcon, QFont
+from PyQt6.QtSvgWidgets import QSvgWidget
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QSystemTrayIcon, QMenu, QLabel,
-                             QHBoxLayout, QWidget, QFrame, QProgressDialog, QProgressBar)
+                             QHBoxLayout, QVBoxLayout, QWidget, QFrame, QProgressDialog, QProgressBar, QDialog)
 from PyQt6.uic import loadUi
 
 from Pages.Config_page import ConfigureWindow
@@ -34,7 +35,6 @@ class AISViewer(QMainWindow):
         self.restore_window_state()
 
     def setup_base_ui(self):
-        """Setup basic UI components"""
         self.app_icon = QIcon(get_resource_path("Assets/logo_ipm.png"))
         self.setWindowIcon(self.app_icon)
         self.setMinimumSize(800, 600)
@@ -44,7 +44,6 @@ class AISViewer(QMainWindow):
         QTimer.singleShot(0, self.start_receiver)
 
     def setup_thread_management(self):
-        """Setup thread management"""
         self.receiver_worker = None
         self.sender_worker = None
         self.upload_worker = None
@@ -54,7 +53,6 @@ class AISViewer(QMainWindow):
         self.stop_upload_event = threading.Event()
 
     def setup_system_tray(self):
-        """Setup system tray icon and menu"""
         self.tray_icon = QSystemTrayIcon(self)
         self.tray_icon.setIcon(self.app_icon)
         self.tray_menu = QMenu()
@@ -83,7 +81,6 @@ class AISViewer(QMainWindow):
         self.tray_icon.show()
 
     def setup_signals(self):
-        """Connect signals to slots"""
         self.tray_icon.activated.connect(self.tray_icon_clicked)
         self.open_app_action.triggered.connect(self.open_app_clicked)
         self.run_receiver_action.triggered.connect(self.start_receiver)
@@ -107,7 +104,6 @@ class AISViewer(QMainWindow):
         signalsWarning.new_data_received.connect(self.update_warning)
 
     def setup_status_bar(self):
-        """Setup status bar with better layout"""
         status_widget = QWidget()
         status_layout = QHBoxLayout(status_widget)
         status_layout.setContentsMargins(0, 0, 0, 0)
@@ -131,7 +127,6 @@ class AISViewer(QMainWindow):
         self.statusbar.addPermanentWidget(status_widget, 0)
 
     def setup_error_logging(self):
-        """Setup error logging with buffer and timer"""
         self.error_buffer = []
         self.error_timer = QTimer()
         self.error_timer.setInterval(1000)
@@ -139,13 +134,11 @@ class AISViewer(QMainWindow):
         self.error_timer.start()
 
     def flush_error_buffer(self):
-        """Flush error buffer to log file"""
         for msg in self.error_buffer:
             error_file_logger.error(msg)
         self.error_buffer.clear()
 
     def restore_window_state(self):
-        """Load window size and position from previous session"""
         settings = QSettings("IPM", "SeaScope_Receiver")
         geometry = settings.value("geometry")
         if geometry:
@@ -154,12 +147,10 @@ class AISViewer(QMainWindow):
             self.resize(1000, 700)
 
     def save_window_state(self):
-        """Save window size and position"""
         settings = QSettings("IPM", "SeaScope_Receiver")
         settings.setValue("geometry", self.saveGeometry())
 
     def update_logger(self, message):
-        """Update log in main logger tab"""
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         full_message = f"{timestamp} - {message}"
 
@@ -181,7 +172,6 @@ class AISViewer(QMainWindow):
         )
 
     def update_error(self, message):
-        """Update log in error tab"""
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         error_message = f"{timestamp} - 🚨 ERROR: {message}"
 
@@ -200,32 +190,34 @@ class AISViewer(QMainWindow):
         )
 
     def update_info(self, message):
-        """Update log with info message"""
         self.update_logger(f"ℹ️ INFO: {message}")
         self.labelInfo.setText(message)
 
     def update_warning(self, message):
-        """Update log with warning message"""
         self.update_logger(f"⚠️ WARNING: {message}")
 
     def create_progress_dialog(self, message):
-        """Helper method to create progress dialog with consistent look"""
-        progress_dialog = QProgressDialog(message, None, 0, 0, self)
-        progress_dialog.setWindowTitle("Please Wait - NMEA Receiver")
-        progress_dialog.setWindowModality(Qt.WindowModality.ApplicationModal)
-        progress_dialog.setMinimumDuration(500)
-        progress_dialog.setMinimumWidth(350)
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Please Wait")
+        dialog.setModal(True)
+        dialog.setFixedSize(250, 180)
+        dialog.setWindowFlags(dialog.windowFlags() & ~Qt.WindowType.WindowContextHelpButtonHint)
 
-        progress_bar = progress_dialog.findChild(QProgressBar)
-        if progress_bar:
-            progress_bar.setTextVisible(False)
-            progress_bar.setMaximum(0)
-            progress_bar.setMinimumHeight(15)
+        layout = QVBoxLayout(dialog)
+        layout.setContentsMargins(10, 10, 10, 10)
+        layout.setSpacing(10)
 
-        return progress_dialog
+        label = QLabel(message)
+        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(label)
+
+        svg = QSvgWidget(get_resource_path("Assets/loading.svg"))
+        svg.setFixedSize(64, 64)
+        layout.addWidget(svg, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        return dialog
 
     def start_upload(self):
-        """Start upload service"""
         self.stop_upload_event.clear()
         self.upload_worker = UploadWorker(self.stop_upload_event)
         self.upload_worker.start()
@@ -234,7 +226,6 @@ class AISViewer(QMainWindow):
         self.statusbar.showMessage('Upload Service Started', self.STATUS_MESSAGE_TIMEOUT)
 
     def stop_upload(self):
-        """Stop upload service"""
         if hasattr(self, 'upload_worker') and self.upload_worker and self.upload_worker.isRunning():
             self.stop_upload_event.set()
             self.upload_worker.quit()
@@ -245,7 +236,6 @@ class AISViewer(QMainWindow):
             self.statusbar.showMessage('Upload Service Stopped', self.STATUS_MESSAGE_TIMEOUT)
 
     def start_receiver(self):
-        """Run AIS receiver in separate thread"""
         if not hasattr(self, 'receiver_worker') or not self.receiver_worker or not self.receiver_worker.isRunning():
             progress_dialog = self.create_progress_dialog("Starting receiver service...")
             progress_dialog.show()
@@ -265,7 +255,6 @@ class AISViewer(QMainWindow):
             self.statusbar.showMessage('Receiver Started', self.STATUS_MESSAGE_TIMEOUT)
 
     def stop_receiver(self):
-        """Stop AIS receiver"""
         if hasattr(self, 'receiver_worker') and self.receiver_worker and self.receiver_worker.isRunning():
             progress_dialog = self.create_progress_dialog("Stopping receiver service...")
             progress_dialog.show()
@@ -287,7 +276,6 @@ class AISViewer(QMainWindow):
             self.statusbar.showMessage('Receiver Stopped', self.STATUS_MESSAGE_TIMEOUT)
 
     def start_sender(self):
-        """Run AIS sending to OpenCPN in separate thread"""
         if not hasattr(self, 'sender_worker') or not self.sender_worker or not self.sender_worker.isRunning():
             progress_dialog = self.create_progress_dialog("Starting sender service...")
             progress_dialog.show()
@@ -308,7 +296,6 @@ class AISViewer(QMainWindow):
             self.statusbar.showMessage('Sender Started', self.STATUS_MESSAGE_TIMEOUT)
 
     def stop_sender(self):
-        """Stop sending AIS to OpenCPN"""
         if hasattr(self, 'sender_worker') and self.sender_worker and self.sender_worker.isRunning():
             progress_dialog = self.create_progress_dialog("Stopping sender service...")
             progress_dialog.show()
@@ -330,7 +317,6 @@ class AISViewer(QMainWindow):
             self.statusbar.showMessage('Sender Stopped', self.STATUS_MESSAGE_TIMEOUT)
 
     def closeEvent(self, event):
-        """Handle event when main window is closed"""
         self.save_window_state()
         event.ignore()
         self.hide()
@@ -341,22 +327,20 @@ class AISViewer(QMainWindow):
         )
 
     def tray_icon_clicked(self, reason):
-        """Show main window when tray icon is clicked"""
         if reason == QSystemTrayIcon.ActivationReason.Trigger:
             self.show_main_window()
 
     def open_app_clicked(self):
-        """Show main window when 'Open App' menu item is clicked"""
         self.show_main_window()
 
     def show_main_window(self):
-        """Helper to show main window"""
         self.show()
         self.raise_()
         self.activateWindow()
 
     def exit(self):
-        """Close application completely with resource cleanup"""
+        progress_dialog = self.create_progress_dialog("Quit...")
+        progress_dialog.show()
         self.stop_upload()
         self.stop_receiver()
         self.stop_sender()
@@ -368,7 +352,10 @@ class AISViewer(QMainWindow):
 
     def showConfigure(self):
         self.stop_receiver()
-        self.stop_upload()
+        QTimer.singleShot(500, self.stop_upload)
+        QTimer.singleShot(700, lambda: self.showConfigureWindow())
+
+    def showConfigureWindow(self):
         dlg = ConfigureWindow(self)
         dlg.data_saved.connect(self.start_upload)
         dlg.data_saved.connect(self.start_receiver)
