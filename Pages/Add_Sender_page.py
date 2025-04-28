@@ -26,12 +26,13 @@ class AddSenderWindow(QDialog):
         name = self.lineName.text()
         host = self.lineAddress.text()
         port = self.linePort.text()
+        network = "tcp" if self.radioTcp.isChecked() else "udp"
         active = 1
 
         if self.sender_data:
-            update_sender(self.sender_data['identity'], name, host, port, active)
+            update_sender(self.sender_data['identity'], name, host, port, network, active)
         else:
-            add_sender(name, host, port, active)
+            add_sender(name, host, port, network, active)
 
         self.data_saved.emit("Sender Save")
         self.close()
@@ -40,8 +41,13 @@ class AddSenderWindow(QDialog):
         self.lineName.setText("Sender Name")
         self.lineAddress.setText("localhost")
         self.linePort.setText("10110")
+        self.radioUdp.setChecked(True)
 
     def loadData(self):
         self.lineName.setText(self.sender_data["name"])
         self.lineAddress.setText(self.sender_data["host"])
         self.linePort.setText(self.sender_data["port"])
+        if self.sender_data["network"] == "tcp":
+            self.radioTcp.setChecked(True)
+        else:
+            self.radioUdp.setChecked(True)

@@ -15,6 +15,7 @@ def get_sender():
             "name": res.name,
             "host": res.host,
             "port": res.port,
+            "network": res.network,
             "active": res.active
         } for res in data]
     except Exception as e:
@@ -25,7 +26,7 @@ def get_sender():
         session.close()
 
 
-def update_sender(identity, name, host, port, active):
+def update_sender(identity, name, host, port, network, active):
     session = Session()
     try:
         res = session.query(SenderModel).filter_by(id=identity).first()
@@ -36,6 +37,7 @@ def update_sender(identity, name, host, port, active):
         res.name = name
         res.host = host
         res.port = port
+        res.network = network
         res.active = active
         session.commit()
         print("Sender updated successfully!")
@@ -46,10 +48,10 @@ def update_sender(identity, name, host, port, active):
     finally:
         session.close()
 
-def add_sender(name, host, port, active):
+def add_sender(name, host, port, network, active):
     session = Session()
     try:
-        new_sender = SenderModel(name=name, host=host, port=port, active=active)
+        new_sender = SenderModel(name=name, host=host, port=port, network=network, active=active)
         session.add(new_sender)
         session.commit()
         print("Sender added successfully!")

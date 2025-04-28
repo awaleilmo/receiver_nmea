@@ -171,6 +171,7 @@ def run_seeder():
                 name="Sender OpenCpn",
                 host="localhost",
                 port="10110",
+                network="udp",
                 active=1
             )
         ]

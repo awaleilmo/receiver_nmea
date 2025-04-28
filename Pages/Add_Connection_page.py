@@ -60,7 +60,7 @@ class AddConnectionWindow(QDialog):
 
         else:
             self.radioNetwork.setChecked(True)
-            if(self.connection_data["network"] == "tcp"):
+            if self.connection_data["network"] == "tcp":
                 self.radioTcp.setChecked(True)
             else:
                 self.radioUdp.setChecked(True)

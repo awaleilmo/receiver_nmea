@@ -60,6 +60,11 @@ class ConfigureWindow(QDialog):
             print(error_msg)
 
     def load_data(self):
+        self.selected_group = None
+        self.edit_button.setEnabled(False)
+        self.remove_button.setEnabled(False)
+        self.add_button.setEnabled(True)
+
         self.connection_checkboxes = {}
         while self.scroll_layout.count():
             item = self.scroll_layout.takeAt(0)
@@ -89,14 +94,16 @@ class ConfigureWindow(QDialog):
                 group_box.setProperty("name", con["name"])
                 group_box.setProperty("host", con["host"])
                 group_box.setProperty("port", con["port"])
+                group_box.setProperty("network", con["network"])
                 layout = QGridLayout()
 
                 # parsing data
                 DName = QLabel(con["name"].upper())
                 DAddress = QLabel(con["host"])
                 DPort = QLabel(con["port"])
+                DNetwork = QLabel(con["network"].upper())
 
-                for label in [DName, DAddress, DPort]:
+                for label in [DName, DAddress, DPort, DNetwork]:
                     label.setFont(font)
 
                 # Checkbox enable
@@ -113,9 +120,11 @@ class ConfigureWindow(QDialog):
 
                 layout.addWidget(QLabel("Host"), 0, 2)
                 layout.addWidget(QLabel("Port"), 0, 3)
+                layout.addWidget(QLabel("Network"), 0, 4)
 
                 layout.addWidget(DAddress, 1, 2)
                 layout.addWidget(DPort, 1, 3)
+                layout.addWidget(DNetwork, 1, 4)
 
                 # Tambahkan group box ke layout utama
                 group_box.setLayout(layout)
@@ -164,6 +173,7 @@ class ConfigureWindow(QDialog):
             "name": self.selected_group.property("name"),
             "host": self.selected_group.property("host"),
             "port": self.selected_group.property("port"),
+            "network": self.selected_group.property("network"),
         }
 
         edit_window = AddSenderWindow(self, sender_data)

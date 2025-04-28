@@ -17,6 +17,7 @@ from Untils.logging_helper import error_file_logger
 from Workers.receiver_worker import ReceiverWorker
 from Workers.sender_worker import SenderWorker
 from Workers.upload_worker import UploadWorker
+from Workers.worker_manager import WorkerManager
 
 
 class AISViewer(QMainWindow):
@@ -25,6 +26,8 @@ class AISViewer(QMainWindow):
 
     def __init__(self):
         super().__init__()
+        self.worker_manager = WorkerManager()
+        self.worker_manager.status_changed.connect(self._handle_worker_status)
         self.setup_base_ui()
         self.setup_thread_management()
         self.setup_system_tray()
@@ -33,6 +36,14 @@ class AISViewer(QMainWindow):
         self.setup_error_logging()
         self.start_upload()
         self.restore_window_state()
+
+    def _handle_worker_status(self, worker_type, status):
+        label = getattr(self, f"{worker_type.capitalize()}Label", None)
+        if not label: return
+
+        label.setText(f"{worker_type.capitalize()}: {status.capitalize()}")
+        style = "color: green; font-weight: bold;" if status == 'running' else ""
+        label.setStyleSheet(style)
 
     def setup_base_ui(self):
         self.app_icon = QIcon(get_resource_path("Assets/logo_ipm.png"))
@@ -166,7 +177,6 @@ class AISViewer(QMainWindow):
             new_text = '\n'.join(current_text.split('\n')[1:])
             self.plainTextLogger.setPlainText(new_text)
 
-
         self.plainTextLogger.verticalScrollBar().setValue(
             self.plainTextLogger.verticalScrollBar().maximum()
         )
@@ -201,7 +211,12 @@ class AISViewer(QMainWindow):
         dialog.setWindowTitle("Please Wait")
         dialog.setModal(True)
         dialog.setFixedSize(250, 180)
-        dialog.setWindowFlags(dialog.windowFlags() & ~Qt.WindowType.WindowContextHelpButtonHint)
+        dialog.setWindowFlags(
+            Qt.WindowType.Window |
+            Qt.WindowType.CustomizeWindowHint |
+            Qt.WindowType.WindowTitleHint |
+            Qt.WindowType.WindowStaysOnTopHint
+        )
 
         layout = QVBoxLayout(dialog)
         layout.setContentsMargins(10, 10, 10, 10)
@@ -214,6 +229,10 @@ class AISViewer(QMainWindow):
         svg = QSvgWidget(get_resource_path("Assets/loading.svg"))
         svg.setFixedSize(64, 64)
         layout.addWidget(svg, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        timer = QTimer(dialog)
+        timer.timeout.connect(lambda: None)  # Force UI update
+        timer.start(100)
 
         return dialog
 
@@ -236,44 +255,46 @@ class AISViewer(QMainWindow):
             self.statusbar.showMessage('Upload Service Stopped', self.STATUS_MESSAGE_TIMEOUT)
 
     def start_receiver(self):
-        if not hasattr(self, 'receiver_worker') or not self.receiver_worker or not self.receiver_worker.isRunning():
-            progress_dialog = self.create_progress_dialog("Starting receiver service...")
-            progress_dialog.show()
+        # if not hasattr(self, 'receiver_worker') or not self.receiver_worker or not self.receiver_worker.isRunning():
+        progress_dialog = self.create_progress_dialog("Starting receiver service...")
+        progress_dialog.show()
 
-            self.stop_receiver_event.clear()
-            self.receiver_worker = ReceiverWorker(self.stop_receiver_event)
-            self.receiver_worker.start()
+        # self.stop_receiver_event.clear()
+        # self.receiver_worker = ReceiverWorker(self.stop_receiver_event)
+        # self.receiver_worker.start()
+        self.worker_manager.start_worker('receiver', ReceiverWorker)
 
-            self.actionRun_Receiver.setEnabled(False)
-            self.actionStop_Receiver.setEnabled(True)
-            self.run_receiver_action.setEnabled(False)
-            self.stop_receiver_action.setEnabled(True)
-            self.ReceiverLabel.setText("Receiver: Running")
-            self.ReceiverLabel.setStyleSheet("QLabel { color: green; font-weight: bold; }")
+        self.actionRun_Receiver.setEnabled(False)
+        self.actionStop_Receiver.setEnabled(True)
+        self.run_receiver_action.setEnabled(False)
+        self.stop_receiver_action.setEnabled(True)
+        # self.ReceiverLabel.setText("Receiver: Running")
+        # self.ReceiverLabel.setStyleSheet("QLabel { color: green; font-weight: bold; }")
 
-            QTimer.singleShot(1000, progress_dialog.close)
-            self.statusbar.showMessage('Receiver Started', self.STATUS_MESSAGE_TIMEOUT)
+        QTimer.singleShot(1000, progress_dialog.close)
+        self.statusbar.showMessage('Receiver Started', self.STATUS_MESSAGE_TIMEOUT)
 
     def stop_receiver(self):
-        if hasattr(self, 'receiver_worker') and self.receiver_worker and self.receiver_worker.isRunning():
-            progress_dialog = self.create_progress_dialog("Stopping receiver service...")
-            progress_dialog.show()
+        # if hasattr(self, 'receiver_worker') and self.receiver_worker and self.receiver_worker.isRunning():
+        progress_dialog = self.create_progress_dialog("Stopping receiver service...")
+        progress_dialog.show()
 
-            self.stop_receiver_event.set()
-            self.receiver_worker.quit()
-            self.receiver_worker.wait()
-            self.receiver_worker = None
+        # self.stop_receiver_event.set()
+        # self.receiver_worker.quit()
+        # self.receiver_worker.wait()
+        # self.receiver_worker = None
+        self.worker_manager.stop_worker('receiver')
 
-            self.actionRun_Receiver.setEnabled(True)
-            self.actionStop_Receiver.setEnabled(False)
-            self.run_receiver_action.setEnabled(True)
-            self.stop_receiver_action.setEnabled(False)
+        self.actionRun_Receiver.setEnabled(True)
+        self.actionStop_Receiver.setEnabled(False)
+        self.run_receiver_action.setEnabled(True)
+        self.stop_receiver_action.setEnabled(False)
 
-            self.ReceiverLabel.setText("Receiver: Stopped")
-            self.ReceiverLabel.setStyleSheet("")
+        # self.ReceiverLabel.setText("Receiver: Stopped")
+        # self.ReceiverLabel.setStyleSheet("")
 
-            QTimer.singleShot(1000, progress_dialog.close)
-            self.statusbar.showMessage('Receiver Stopped', self.STATUS_MESSAGE_TIMEOUT)
+        QTimer.singleShot(1000, progress_dialog.close)
+        self.statusbar.showMessage('Receiver Stopped', self.STATUS_MESSAGE_TIMEOUT)
 
     def start_sender(self):
         if not hasattr(self, 'sender_worker') or not self.sender_worker or not self.sender_worker.isRunning():

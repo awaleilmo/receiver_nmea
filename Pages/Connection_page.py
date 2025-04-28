@@ -37,6 +37,11 @@ class ConnectionWindow(QDialog):
             apply_button.clicked.connect(self.save_changes)
 
     def load_data(self):
+        self.selected_group = None
+        self.edit_button.setEnabled(False)
+        self.remove_button.setEnabled(False)
+        self.add_button.setEnabled(True)
+
         self.connection_checkboxes = {}
         while self.scroll_layout.count():
             item = self.scroll_layout.takeAt(0)
@@ -136,7 +141,7 @@ class ConnectionWindow(QDialog):
             self.scroll_layout.addStretch()
 
     def select_row(self, group_box):
-        if self.selected_group == group_box:  # Jika sudah dipilih, batalkan pilihan
+        if self.selected_group == group_box:
             self.selected_group.setStyleSheet("QGroupBox { border: 1px solid; border-radius: 5px; }")
             self.selected_group = None
             self.edit_button.setEnabled(False)
