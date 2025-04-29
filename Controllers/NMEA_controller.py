@@ -42,8 +42,16 @@ def mark_data_as_sent(ids):
         session.commit()
         session.close()
 
-def get_ais_latest():
+def get_ais_latest(last_send_id=None):
     with Session() as session:
-        query = session.query(nmea_data.nmea).order_by(nmea_data.created_at.desc()).limit(2)
-        result = session.execute(query).fetchall()
-        return [row[0] for row in result]
+        query = session.query(nmea_data.id, nmea_data.nmea)
+        if last_send_id:
+            query = query.filter(nmea_data.id > last_send_id)
+        else:
+            ten_seconds_ago = datetime.datetime.utcnow() - datetime.timedelta(seconds=10)
+            query = query.filter(nmea_data.created_at >= ten_seconds_ago)
+
+        query = query.order_by(nmea_data.id.asc()).limit(1000)
+
+        results = session.execute(query).fetchall()
+        return results

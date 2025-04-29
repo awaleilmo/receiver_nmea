@@ -5,6 +5,7 @@ from PyQt6.QtCore import pyqtSignal
 from Controllers.Configure_controller import get_config, update_config
 from Controllers.Sender_controller import get_sender, update_sender_status, remove_sender
 from Models import SenderModel
+from Services.SignalsMessages import signalsError, signalsWarning, signalsInfo
 from Untils.path_helper import get_resource_path
 from Pages.Add_Sender_page import AddSenderWindow
 
@@ -32,7 +33,7 @@ class ConfigureWindow(QDialog):
         config = get_config()
         self.apiServer.setText(config['api_server'])
 
-        self.buttonBox.accepted.connect(self.save_config)
+        self.buttonBox.accepted.connect(self.save_config) # Save
 
         self.load_data()
 
@@ -48,7 +49,7 @@ class ConfigureWindow(QDialog):
                     from Services.SignalsMessages import signalsError
                     error_msg = f"Error updating sender {conn_id}: {str(e)}"
                     signalsError.new_data_received.emit(error_msg)
-                    print(error_msg)
+                    signalsError.new_data_received.emit(error_msg)
             update_config(api_server)
 
             self.data_saved.emit()
@@ -57,7 +58,7 @@ class ConfigureWindow(QDialog):
             from Services.SignalsMessages import signalsError
             error_msg = f"Error saving changes: {str(e)}"
             signalsError.new_data_received.emit(error_msg)
-            print(error_msg)
+            signalsError.new_data_received.emit(error_msg)
 
     def load_data(self):
         self.selected_group = None
@@ -80,7 +81,6 @@ class ConfigureWindow(QDialog):
             if not data or len(data) == 0:
                 from Services.SignalsMessages import signalsInfo
                 signalsInfo.new_data_received.emit("Tidak ada data Sender yang ditemukan.")
-                print("Tidak ada data yang ditemukan.")
                 self.edit_button.setEnabled(False)
                 self.remove_button.setEnabled(False)
                 self.add_button.setEnabled(True)
@@ -136,7 +136,7 @@ class ConfigureWindow(QDialog):
             from Services.SignalsMessages import signalsError
             error_msg = f"Error saat memuat data koneksi: {str(e)}"
             signalsError.new_data_received.emit(error_msg)
-            print(error_msg)
+            signalsError.new_data_received.emit(error_msg)
             self.scroll_layout.addStretch()
 
     def select_row(self, group_box):
@@ -165,7 +165,7 @@ class ConfigureWindow(QDialog):
 
     def EditWindow(self):
         if not self.selected_group:
-            print("Tidak ada data yang ditemukan.")
+            signalsWarning.new_data_received.emit("Tidak ada data yang ditemukan.")
             return
 
         sender_data = {
@@ -182,7 +182,7 @@ class ConfigureWindow(QDialog):
 
     def RemoveWindow(self):
         if not self.selected_group:
-            print("Tidak ada data yang ditemukan.")
+            signalsWarning.new_data_received.emit("Tidak ada data yang ditemukan.")
             return
 
         try:
@@ -216,7 +216,7 @@ class ConfigureWindow(QDialog):
                         update_sender_status(connection_id, 0)
                         break
             except Exception as e:
-                print(f"Warning when deactivating: {e}")
+                signalsWarning.new_data_received.emit(f"Warning when deactivating: {e}")
 
             # Reset UI state sebelum haups database
             if connection_id in self.connection_checkboxes:
@@ -229,9 +229,9 @@ class ConfigureWindow(QDialog):
 
             try:
                 remove_sender(connection_id)
-                print(f"Delete connection {connection_id} successful.")
+                signalsInfo.new_data_received.emit(f"Delete connection {connection_id} successful.")
             except Exception as e:
-                print(f"Error saat menghapus koneksi dari database: {str(e)}")
+                signalsError.new_data_received.emit(f"Error saat menghapus koneksi dari database: {str(e)}")
                 return
 
             # Hpaus widget koneksi dari UI
@@ -252,4 +252,11 @@ class ConfigureWindow(QDialog):
             self.data_saved.emit()
 
         except Exception as e:
-            print(f"Error saat proses penghapusan koneksi: {str(e)}")
+            signalsError.new_data_received.emit(f"Error saat proses penghapusan koneksi: {str(e)}")
+
+
+    def closeEvent(self, event):
+        self.data_saved.emit()
+        event.accept()
+        self.close()
+

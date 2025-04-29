@@ -9,6 +9,8 @@ def reset_database_connection():
     print("\n Mereset koneksi database...")
     close_all_sessions()
     engine.dispose()
+    if 'sqlite' in engine.url.drivername and engine.url.database != ':memory:':
+        engine.connect()
 
 def verify_tables_created(expected_tables):
     """Verifikasi tabel yang dibuat dengan retry mechanism"""
@@ -72,6 +74,7 @@ def run_migrations():
         return
 
     reset_database_connection()
+    time.sleep(0.5)
 
     expected_tables = list(Base.metadata.tables.keys())
     print(f"\n🛠️ Membuat tabel: {expected_tables}")
@@ -105,22 +108,11 @@ def refresh_migrations():
     reset_database_connection()
 
     with engine.begin() as conn:
-        if engine.dialect.name == 'sqlite':
-            conn.execute(text("PRAGMA foreign_keys=OFF"))
+        Base.metadata.drop_all(conn)
+        print("🗑️ Semua tabel dihapus")
 
-            tables = conn.execute(text(
-                "SELECT name FROM sqlite_master "
-                "WHERE type='table' AND name NOT LIKE 'sqlite_%'"
-            )).scalars().all()
-
-            for table in tables:
-                conn.execute(text(f"DROP TABLE IF EXISTS {table}"))
-                print(f"🗑️ Menghapus tabel: {table}")
-
-            conn.execute(text("VACUUM"))
-            conn.execute(text("PRAGMA foreign_keys=ON"))
-        else:
-            Base.metadata.drop_all(conn)
+    reset_database_connection()
+    time.sleep(1)
 
     expected_tables = list(Base.metadata.tables.keys())
     print(f"\n🛠️ Membangun ulang tabel: {expected_tables}")
@@ -172,6 +164,7 @@ def run_seeder():
                 host="localhost",
                 port="10110",
                 network="udp",
+                last_send_id=0,
                 active=1
             )
         ]

@@ -12,6 +12,7 @@ class SenderModel(Base):
     host = Column(String, nullable=True)
     port = Column(String, nullable=True)
     network = Column(String, nullable=True)
+    last_send_id = Column(Integer, nullable=True, default=0)
     active = Column(Integer, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow())
     updated_at = Column(DateTime, default=datetime.datetime.utcnow())

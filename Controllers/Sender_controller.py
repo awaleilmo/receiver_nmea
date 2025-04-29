@@ -16,6 +16,7 @@ def get_sender():
             "host": res.host,
             "port": res.port,
             "network": res.network,
+            "last_send_id": res.last_send_id,
             "active": res.active
         } for res in data]
     except Exception as e:
@@ -87,6 +88,23 @@ def update_sender_status(identity, active):
         res.active = active
         session.commit()
         print("Sender status updated successfully!")
+    except Exception as e:
+        session.rollback()
+        print(f"Error: {e}")
+        raise e
+    finally:
+        session.close()
+
+def update_sender_last_send_id(identity, last_send_id):
+    session = Session()
+    try:
+        res = session.query(SenderModel).filter_by(id=identity).first()
+        if res is None:
+            print("No sender data found! Update skipped.")
+            return
+
+        res.last_send_id = last_send_id
+        session.commit()
     except Exception as e:
         session.rollback()
         print(f"Error: {e}")

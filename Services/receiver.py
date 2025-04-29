@@ -23,6 +23,7 @@ def receive_nmea_tcp(host, port, stop_event, connection_id):
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
                 sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 sock.bind((host, port))
+                sock.listen(1)
                 signalsLogger.new_data_received.emit(f"Menunggu TCP data NMEA di {host}:{port}...")
                 count = 0
                 start_time = time.time()
@@ -49,7 +50,6 @@ def receive_nmea_tcp(host, port, stop_event, connection_id):
             time.sleep(10)
         finally:
             signalsInfo.new_data_received.emit("Receiver stopped.")
-
 
 def receive_nmea_udp(host, port, stop_event, connection_id):
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
@@ -80,9 +80,8 @@ def receive_nmea_udp(host, port, stop_event, connection_id):
             except Exception as e:
                 signalsError.new_data_received.emit(f"UDP ERROR: {e}")
 
-
 def receive_nmea_serial(port, baudrate, stop_event, connection_id):
-    ser = None  # Pastikan ser dideklarasikan sebelum try
+    ser = None
 
     while not stop_event.is_set():
         try:
@@ -92,7 +91,7 @@ def receive_nmea_serial(port, baudrate, stop_event, connection_id):
             start_time = time.time()
             count = 0
 
-            while not stop_event.is_set():  # Perbaikan: Pakai ()
+            while not stop_event.is_set():
                 if ser.in_waiting:
                     buffer += ser.read(ser.in_waiting).decode("utf-8", errors="ignore")
 
@@ -107,24 +106,23 @@ def receive_nmea_serial(port, baudrate, stop_event, connection_id):
                     start_time = time.time()
 
                 time.sleep(0.05)
-        except serial.SerialException as e:  # Menangani error jika port tidak bisa dibuka
+        except serial.SerialException as e:
             signalsError.new_data_received.emit(f"Gagal membuka {port}: {e}")
             time.sleep(10)
 
-        except Exception as e:  # Tangani error umum lainnya
+        except Exception as e:
             signalsError.new_data_received.emit(f"Serial ERROR: {e}")
 
         finally:
-            if ser is not None:  # Perbaikan: Cek apakah ser sudah dibuat sebelum ditutup
+            if ser is not None:
                 try:
                     if ser.is_open:
-                        ser.close()  # Tutup serial sebelum reconnect
+                        ser.close()
                         signalsInfo.new_data_received.emit(f"Port {port} ditutup.")
                 except Exception as e:
                     signalsError.new_data_received.emit(f"Error saat menutup serial {port}: {e}")
 
     signalsInfo.new_data_received.emit("Receiver serial stopped.")
-
 
 def start_multi_receiver(stop_event):
     try:
@@ -139,7 +137,7 @@ def start_multi_receiver(stop_event):
             has_active_connection = True
 
             if dataset.get('type') == 'network':
-                thread = None  # Inisialisasi thread
+                thread = None
 
                 protocol = dataset.get('network')
                 address = dataset.get('address')
@@ -160,7 +158,7 @@ def start_multi_receiver(stop_event):
                 if thread:
                     thread.start()
                     threads.append(thread)
-                    time.sleep(0.1)  # Hindari CPU overload
+                    time.sleep(0.1)
             elif dataset.get('type') == 'serial':
 
                 data_port = dataset.get('data_port')
@@ -182,7 +180,7 @@ def start_multi_receiver(stop_event):
         if not has_active_connection:
             signalsInfo.new_data_received.emit("⚠️ Tidak ada koneksi aktif! Menunggu stop_event...")
             while not stop_event.is_set():
-                time.sleep(1)  # Biarkan berjalan agar bisa dihentikan
+                time.sleep(1)
             signalsInfo.new_data_received.emit("Receiver dihentikan.")
         return threads
 
