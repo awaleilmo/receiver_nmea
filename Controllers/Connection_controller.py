@@ -3,6 +3,8 @@ from Models.__init__ import engine
 from Models.Connection_model import ConnectionModel
 import datetime
 
+from Untils.logging_helper import sys_logger
+
 Session = sessionmaker(bind=engine)
 def save_connection(name, type, data_port, baudrate, protocol, network, address, port, active):
     session = Session()
@@ -12,7 +14,7 @@ def save_connection(name, type, data_port, baudrate, protocol, network, address,
         session.commit()
     except Exception as e:
         session.rollback()
-        print(f"Error: {e}")
+        sys_logger.error(f"Error: {e}")
         raise e
     finally:
         session.close()
@@ -33,7 +35,7 @@ def update_connection(id, name, type, data_port, baudrate, protocol, network, ad
         session.commit()
     except Exception as e:
         session.rollback()
-        print(f"Error: {e}")
+        sys_logger.error(f"Error: {e}")
         raise e
     finally:
         session.close()
@@ -56,7 +58,7 @@ def get_connection():
         } for con in res]
     except Exception as e:
         session.rollback()
-        print(f"Error: {e}")
+        sys_logger.error(f"Error: {e}")
         raise e
     finally:
         session.close()
@@ -69,7 +71,7 @@ def update_connection_status(id, active):
         session.commit()
     except Exception as e:
         session.rollback()
-        print(f"Error: {e}")
+        sys_logger.error(f"Error: {e}")
         raise e
     finally:
         session.close()
@@ -82,7 +84,7 @@ def delete_connection(id):
         session.commit()
     except Exception as e:
         session.rollback()
-        print(f"Error: {e}")
+        sys_logger.error(f"Error: {e}")
         raise e
     finally:
         session.close()

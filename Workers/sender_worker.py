@@ -2,6 +2,7 @@ import time
 from PyQt6.QtCore import QThread
 from Services import sender
 from Services.SignalsMessages import signalsError, signalsInfo, signalsWarning
+from Untils.logging_helper import sys_logger
 
 
 class SenderWorker(QThread):
@@ -19,7 +20,7 @@ class SenderWorker(QThread):
                     break
                 time.sleep(1)
         except Exception as e:
-            signalsError.new_data_received.emit(f"Sender worker error: {str(e)}")
+            sys_logger.error(f"Sender worker error: {str(e)}")
             self.stop_event.set()
         finally:
-            signalsWarning.new_data_received.emit("Sender worker stopped.")
+            sys_logger.info("Sender worker stopped.")

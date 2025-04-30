@@ -4,6 +4,7 @@ from PyQt6.QtWidgets import QDialog
 import serial.tools.list_ports
 
 from Controllers.Connection_controller import save_connection, update_connection
+from Untils.logging_helper import sys_logger
 from Untils.path_helper import get_resource_path
 
 
@@ -50,13 +51,13 @@ class AddConnectionWindow(QDialog):
             if baudrate_index != -1:
                 self.comboBaudrate.setCurrentIndex(baudrate_index)
             else:
-                print("Baudrate tidak ditemukan dalam ComboBox!")
+                sys_logger.warning("Baudrate tidak ditemukan dalam ComboBox!")
 
             data_port_index = self.comboDataPort.findData(self.connection_data["data_port"])
             if data_port_index != -1:
                 self.comboDataPort.setCurrentIndex(data_port_index)
             else:
-                print("Data Port tidak ditemukan dalam ComboBox!")
+                sys_logger.warning("Data Port tidak ditemukan dalam ComboBox!")
 
         else:
             self.radioNetwork.setChecked(True)
@@ -71,7 +72,7 @@ class AddConnectionWindow(QDialog):
         if protocol_index != -1:
             self.comboProtocol.setCurrentIndex(protocol_index)
         else:
-            print("Protocol tidak ditemukan dalam ComboBox!")
+            sys_logger.warning("Protocol tidak ditemukan dalam ComboBox!")
 
     def on_radio_type_changed(self):
         self.update_ui_visibility()

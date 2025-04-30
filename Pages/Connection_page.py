@@ -32,7 +32,6 @@ class ConnectionWindow(QDialog):
 
         # Hubungkan tombol dengan fungsi masing-masing
         self.buttonBox.accepted.connect(self.save_changes)  # OK
-        self.buttonBox.rejected.connect(self.reject)  # Cancel
 
     def load_data(self):
         self.selected_group = None
@@ -280,7 +279,4 @@ class ConnectionWindow(QDialog):
     def closeEvent(self, event):
         self.data_saved.emit()
         event.accept()
-        self.close()
-    def reject(self):
-        self.data_saved.emit()
         self.close()

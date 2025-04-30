@@ -3,6 +3,8 @@ from Models.__init__ import engine
 from Models.Config_model import ConfigModel
 import datetime
 
+from Untils.logging_helper import sys_logger
+
 Session = sessionmaker(bind=engine)
 
 def update_config(api_server):
@@ -10,15 +12,15 @@ def update_config(api_server):
     try:
         res = session.query(ConfigModel).first()
         if res is None:
-            print("No configuration data found! Update skipped.")
+            sys_logger.info("No configuration data found! Update skipped.")
             return
 
         res.api_server = api_server
         session.commit()
-        print("Configuration updated successfully!")
+        sys_logger.info("Configuration updated successfully!")
     except Exception as e:
         session.rollback()
-        print(f"Error: {e}")
+        sys_logger.error(f"Error: {e}")
         raise e
     finally:
         session.close()
@@ -33,7 +35,7 @@ def get_config():
         }
     except Exception as e:
         session.rollback()
-        print(f"Error: {e}")
+        sys_logger.error(f"Error: {e}")
         raise e
     finally:
         session.close()

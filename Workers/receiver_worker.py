@@ -1,6 +1,7 @@
 from PyQt6.QtCore import QThread
 from Services import receiver
 from Services.SignalsMessages import signalsError
+from Untils.logging_helper import sys_logger
 
 
 class ReceiverWorker(QThread):
@@ -18,6 +19,6 @@ class ReceiverWorker(QThread):
                 self.msleep(500)
         except Exception as e:
             self.stop_event.set()
-            signalsError.new_data_received.emit(f"Receiver worker error: {str(e)}")
+            sys_logger.error(f"Receiver worker error: {str(e)}")
         finally:
-            signalsError.new_data_received.emit("Receiver worker stopped.")
+            sys_logger.info("Receiver worker stopped.")

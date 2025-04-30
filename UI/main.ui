@@ -106,7 +106,7 @@
      <x>0</x>
      <y>0</y>
      <width>1048</width>
-     <height>33</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -132,6 +132,9 @@
     <addaction name="separator"/>
     <addaction name="actionRun_Sender_OpenCPN"/>
     <addaction name="actionStop_Sender_OpenCPN"/>
+    <addaction name="separator"/>
+    <addaction name="actionRun_Uploader"/>
+    <addaction name="actionStop_Uploader"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuRun"/>
@@ -144,6 +147,9 @@
    </property>
    <property name="text">
     <string>Exit</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Q</string>
    </property>
    <property name="iconVisibleInMenu">
     <bool>true</bool>
@@ -158,6 +164,9 @@
    </property>
    <property name="text">
     <string>Configure</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O, C</string>
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::TextHeuristicRole</enum>
@@ -219,6 +228,34 @@
    </property>
    <property name="text">
     <string>Connections</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O, I</string>
+   </property>
+  </action>
+  <action name="actionRun_Uploader">
+   <property name="icon">
+    <iconset theme="media-playback-start"/>
+   </property>
+   <property name="text">
+    <string>Run Uploader</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Alt+R</string>
+   </property>
+  </action>
+  <action name="actionStop_Uploader">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset theme="media-playback-stop"/>
+   </property>
+   <property name="text">
+    <string>Stop Uploader</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Alt+T</string>
    </property>
   </action>
  </widget>
