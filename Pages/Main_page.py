@@ -309,10 +309,6 @@ class AISViewer(BaseMainWindow):
         self.raise_()
         self.activateWindow()
 
-    def tray_icon_clicked(self, reason):
-        if reason == QSystemTrayIcon.ActivationReason.Trigger:
-            self.show_main_window()
-
     def open_app_clicked(self):
         self.show_main_window()
 
