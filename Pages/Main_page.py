@@ -8,9 +8,13 @@ from PyQt6.QtWidgets import (QApplication, QMainWindow, QSystemTrayIcon, QMenu, 
                              QHBoxLayout, QVBoxLayout, QWidget, QFrame, QProgressDialog, QProgressBar, QDialog)
 from PyQt6.uic import loadUi
 
+from Controllers.Worker_controller import WorkerController
 from Pages.Config_page import ConfigureWindow
 from Pages.Connection_page import ConnectionWindow
 from Services.SignalsMessages import signalsLogger, signalsError, signalsInfo, signalsWarning
+from Services.log_manager import LogManager
+from UI.components.main_window import BaseMainWindow
+from UI.components.system_tray import SystemTrayManager
 from Untils.path_helper import get_resource_path
 from Untils.logging_helper import error_file_logger
 
@@ -22,46 +26,67 @@ from Workers.worker_manager import WorkerManager
 from UI.components.progress_dialog import ProgressDialog
 
 
-class AISViewer(QMainWindow):
+class AISViewer(BaseMainWindow):
     MAX_LOG_ITEMS = 1000
     STATUS_MESSAGE_TIMEOUT = 5000
 
     def __init__(self):
         super().__init__()
-        self.worker_manager = WorkerManager()
-        self.worker_manager.status_changed.connect(self._handle_worker_status)
+        self.worker_controller = WorkerController()
+        self.log_manager = LogManager()
+
+        self.tray_manager = SystemTrayManager(self.app_icon, self)
+
         self.progress_dialog = None
-        self.setup_base_ui()
-        self.setup_system_tray()
-        self.setup_signals()
+
+        self.setup_connections()
         self.setup_status_bar()
-        self.setup_error_logging()
+        self.setup_tray_connections()
+
+        self.setup_signals()
         self.restore_window_state()
         self.startup()
+
+    def setup_connections(self):
+        self.worker_controller.status_changed.connect(self._handle_worker_status)
+
+        self.log_manager.log_received.connect(self.update_logger)
+        self.log_manager.error_received.connect(self.update_error)
+        self.log_manager.info_received.connect(self.update_info)
+        self.log_manager.warning_received.connect(self.update_warning)
 
     def startup(self):
         self._show_progress_dialog("Preparing to startup...")
         QTimer.singleShot(1000, lambda: [
-            self.worker_manager.start_worker('receiver', ReceiverWorker),
-            self.worker_manager.start_worker('upload', UploadWorker),
+            self.worker_controller.start_worker('receiver', ReceiverWorker),
+            self.worker_controller.start_worker('upload', UploadWorker),
             self.actionRun_Uploader.setEnabled(False),
             self.actionStop_Uploader.setEnabled(True),
-            self.run_upload_action.setEnabled(False),
-            self.stop_upload_action.setEnabled(True),
             self.actionRun_Receiver.setEnabled(False),
             self.actionStop_Receiver.setEnabled(True),
-            self.run_receiver_action.setEnabled(False),
-            self.stop_receiver_action.setEnabled(True),
             self._close_progress()
         ])
 
     def _handle_worker_status(self, worker_type, status):
+
         label = getattr(self, f"{worker_type.capitalize()}Label", None)
-        if not label: return
+        if not label:
+            return
 
         label.setText(f"{worker_type.capitalize()}: {status.capitalize()}")
         style = "color: green; font-weight: bold;" if status == 'running' else ""
         label.setStyleSheet(style)
+
+        # Update tray actions state
+        states = {
+            'run_receiver': status != 'running',
+            'stop_receiver': status == 'running',
+            'run_sender': status != 'running',
+            'stop_sender': status == 'running',
+            'run_upload': status != 'running',
+            'stop_upload': status == 'running',
+        }
+        self.tray_manager.set_actions_state(**states)
 
     def _show_progress_dialog(self, message):
         if self.progress_dialog:
@@ -76,58 +101,20 @@ class AISViewer(QMainWindow):
             self.progress_dialog.deleteLater()
             self.progress_dialog = None
 
-    def setup_base_ui(self):
-        self.app_icon = QIcon(get_resource_path("Assets/logo_ipm.png"))
-        self.setWindowIcon(self.app_icon)
-        self.setMinimumSize(800, 600)
-        ui_path = get_resource_path("UI/main.ui")
-        loadUi(ui_path, self)
-        self.labelInfo.setText("AIS Viewer")
+    def setup_tray_connections(self):
+        # Koneksi untuk show/hide
+        self.tray_manager.open_app_requested.connect(self.show_main_window)
+        self.tray_manager.exit_requested.connect(self.exit)
 
-    def setup_system_tray(self):
-        self.tray_icon = QSystemTrayIcon(self)
-        self.tray_icon.setIcon(self.app_icon)
-        self.tray_menu = QMenu()
-
-        iconRunTray = QIcon.fromTheme("media-playback-start")
-        iconStopTray = QIcon.fromTheme("media-playback-stop")
-
-        self.open_app_action = self.tray_menu.addAction("Open App")
-        self.run_receiver_action = self.tray_menu.addAction("Run Receiver")
-        self.stop_receiver_action = self.tray_menu.addAction("Stop Receiver")
-        self.run_sender_action = self.tray_menu.addAction("Run Sender")
-        self.stop_sender_action = self.tray_menu.addAction("Stop Sender")
-        self.run_upload_action = self.tray_menu.addAction("Run Uploader")
-        self.stop_upload_action = self.tray_menu.addAction("Stop Uploader")
-        self.exit_action = self.tray_menu.addAction("Exit")
-
-        self.run_receiver_action.setIcon(iconRunTray)
-        self.stop_receiver_action.setIcon(iconStopTray)
-        self.run_sender_action.setIcon(iconRunTray)
-        self.stop_sender_action.setIcon(iconStopTray)
-        self.run_upload_action.setIcon(iconRunTray)
-        self.stop_upload_action.setIcon(iconStopTray)
-
-        self.run_receiver_action.setEnabled(True)
-        self.stop_receiver_action.setEnabled(False)
-        self.run_sender_action.setEnabled(True)
-        self.stop_sender_action.setEnabled(False)
-        self.run_upload_action.setEnabled(True)
-        self.stop_upload_action.setEnabled(False)
-
-        self.tray_icon.setContextMenu(self.tray_menu)
-        self.tray_icon.show()
+        # Koneksi untuk worker control
+        self.tray_manager.run_receiver_requested.connect(self.start_receiver)
+        self.tray_manager.stop_receiver_requested.connect(self.stop_receiver)
+        self.tray_manager.run_sender_requested.connect(self.start_sender)
+        self.tray_manager.stop_sender_requested.connect(self.stop_sender)
+        self.tray_manager.run_upload_requested.connect(self.start_upload)
+        self.tray_manager.stop_upload_requested.connect(self.stop_upload)
 
     def setup_signals(self):
-        self.tray_icon.activated.connect(self.tray_icon_clicked)
-        self.open_app_action.triggered.connect(self.open_app_clicked)
-        self.run_receiver_action.triggered.connect(self.start_receiver)
-        self.stop_receiver_action.triggered.connect(self.stop_receiver)
-        self.run_sender_action.triggered.connect(self.start_sender)
-        self.stop_sender_action.triggered.connect(self.stop_sender)
-        self.run_upload_action.triggered.connect(self.start_upload)
-        self.stop_upload_action.triggered.connect(self.stop_upload)
-        self.exit_action.triggered.connect(self.exit)
 
         self.actionExit.triggered.connect(self.exit)
         self.actionConfigure.triggered.connect(self.showConfigure)
@@ -243,93 +230,84 @@ class AISViewer(QMainWindow):
 
     def start_upload(self):
         self._show_progress_dialog("Starting uploader service...")
-        self.worker_manager.start_worker('upload', UploadWorker)
+        self.worker_controller.start_worker('upload', UploadWorker)
 
         self.actionRun_Uploader.setEnabled(False)
         self.actionStop_Uploader.setEnabled(True)
-        self.run_upload_action.setEnabled(False)
-        self.stop_upload_action.setEnabled(True)
 
-        QTimer.singleShot(500, self._close_progress)
+        QTimer.singleShot(200, self._close_progress)
         self.statusbar.showMessage('Upload Service Started', self.STATUS_MESSAGE_TIMEOUT)
 
     def stop_upload(self):
         self._show_progress_dialog("Starting uploader service...")
 
-        self.worker_manager.stop_worker('upload')
+        self.worker_controller.stop_worker('upload')
 
         self.actionRun_Uploader.setEnabled(True)
         self.actionStop_Uploader.setEnabled(False)
-        self.run_upload_action.setEnabled(True)
-        self.stop_upload_action.setEnabled(False)
 
-        QTimer.singleShot(500, self._close_progress)
+        QTimer.singleShot(200, self._close_progress)
         self.statusbar.showMessage('Upload Service Stopped', self.STATUS_MESSAGE_TIMEOUT)
 
     def start_receiver(self):
         self._show_progress_dialog("Starting receiver service...")
 
-        self.worker_manager.start_worker('receiver', ReceiverWorker)
+        self.worker_controller.start_worker('receiver', ReceiverWorker)
 
         self.actionRun_Receiver.setEnabled(False)
         self.actionStop_Receiver.setEnabled(True)
-        self.run_receiver_action.setEnabled(False)
-        self.stop_receiver_action.setEnabled(True)
 
-        QTimer.singleShot(1000, self._close_progress)
+        QTimer.singleShot(200, self._close_progress)
         self.statusbar.showMessage('Receiver Started', self.STATUS_MESSAGE_TIMEOUT)
 
     def stop_receiver(self):
         self._show_progress_dialog("Stopping receiver service...")
 
-        self.worker_manager.stop_worker('receiver')
+        self.worker_controller.stop_worker('receiver')
 
         self.actionRun_Receiver.setEnabled(True)
         self.actionStop_Receiver.setEnabled(False)
-        self.run_receiver_action.setEnabled(True)
-        self.stop_receiver_action.setEnabled(False)
 
-        QTimer.singleShot(1000, self._close_progress)
+        QTimer.singleShot(200, self._close_progress)
         self.statusbar.showMessage('Receiver Stopped', self.STATUS_MESSAGE_TIMEOUT)
 
     def start_sender(self):
         self._show_progress_dialog("Starting sender service...")
 
-        self.worker_manager.start_worker('sender', SenderWorker)
+        self.worker_controller.start_worker('sender', SenderWorker)
 
         self.actionRun_Sender_OpenCPN.setEnabled(False)
         self.actionStop_Sender_OpenCPN.setEnabled(True)
-        self.run_sender_action.setEnabled(False)
-        self.stop_sender_action.setEnabled(True)
 
-        QTimer.singleShot(1000, self._close_progress)
+        QTimer.singleShot(200, self._close_progress)
         self.statusbar.showMessage('Sender Started', self.STATUS_MESSAGE_TIMEOUT)
 
     def stop_sender(self):
         self._show_progress_dialog("Stopping sender service...")
 
-        self.worker_manager.stop_worker('sender')
+        self.worker_controller.stop_worker('sender')
 
         self.actionRun_Sender_OpenCPN.setEnabled(True)
         self.actionStop_Sender_OpenCPN.setEnabled(False)
-        self.run_sender_action.setEnabled(True)
-        self.stop_sender_action.setEnabled(False)
 
-        self.SenderLabel.setText("Sender: Stopped")
-        self.SenderLabel.setStyleSheet("")
-
-        QTimer.singleShot(1000, self._close_progress)
+        QTimer.singleShot(200, self._close_progress)
         self.statusbar.showMessage('Sender Stopped', self.STATUS_MESSAGE_TIMEOUT)
 
     def closeEvent(self, event):
         self.save_window_state()
         event.ignore()
         self.hide()
-        self.tray_icon.showMessage(
+        self.tray_manager.show()
+        self.tray_manager.show_message(
             "NMEA Receiver IPM",
             "Application is still running in system tray.",
-            QSystemTrayIcon.MessageIcon.Information
+            # QSystemTrayIcon.MessageIcon.Information
         )
+
+    def show_main_window(self):
+        self.show()
+        self.raise_()
+        self.activateWindow()
 
     def tray_icon_clicked(self, reason):
         if reason == QSystemTrayIcon.ActivationReason.Trigger:
@@ -338,34 +316,29 @@ class AISViewer(QMainWindow):
     def open_app_clicked(self):
         self.show_main_window()
 
-    def show_main_window(self):
-        self.show()
-        self.raise_()
-        self.activateWindow()
-
     def exit(self):
         self._show_progress_dialog("Quit...")
         if hasattr(self, 'error_timer') and self.error_timer.isActive():
             self.error_timer.stop()
-        self.tray_icon.hide()
+        self.tray_manager.hide()
         self._close_progress()
         QApplication.quit()
 
     def showConfigure(self):
         self._show_progress_dialog("Preparing to configure...")
 
-        self.worker_manager.stop_worker('receiver')
-        self.worker_manager.stop_worker('sender')
-        self.worker_manager.stop_worker('upload')
+        self.worker_controller.stop_worker('receiver')
+        self.worker_controller.stop_worker('sender')
+        self.worker_controller.stop_worker('upload')
         self._close_progress()
         self._open_config_window()
 
     def _open_config_window(self):
         dlg = ConfigureWindow(self)
         dlg.data_saved.connect(lambda: [
-            self.worker_manager.start_worker('receiver', ReceiverWorker),
-            self.worker_manager.start_worker('upload', UploadWorker),
-            self.worker_manager.start_worker('sender', SenderWorker)
+            self.worker_controller.start_worker('receiver', ReceiverWorker),
+            self.worker_controller.start_worker('upload', UploadWorker),
+            self.worker_controller.start_worker('sender', SenderWorker)
         ])
         dlg.exec()
 
@@ -376,7 +349,7 @@ class AISViewer(QMainWindow):
             self._close_progress()
             self._show_connection_window()
 
-        self.worker_manager.stop_worker('receiver', stop_callback)
+        self.worker_controller.stop_worker('receiver', stop_callback)
 
     def _show_connection_window(self):
         dlg = ConnectionWindow(self)
