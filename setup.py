@@ -15,11 +15,11 @@ ADDITIONAL_FILES = [
     "Models/",
     "Services/",
     "Workers/",
-    "nmea_data.db",
     "requirements.txt"
 ]
 OUTPUT_DIR = "dist"
 VERSION = "1.0.0"
+PROD_DB_NAME = "nmea_prod.db"
 
 
 def check_dependencies():
