@@ -42,6 +42,7 @@ class AISViewer(BaseMainWindow):
         self.setup_connections()
         self.setup_status_bar()
         self.setup_tray_connections()
+        self.setup_error_logging()
 
         self.setup_signals()
         self.restore_window_state()
