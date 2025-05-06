@@ -29,6 +29,11 @@ def get_config():
     session = Session()
     try:
         res = session.query(ConfigModel).first()
+        if res is None:
+            return {
+                "id": 0,
+                "api_server": "http://localhost:8000/api/ais_bulk"
+            }
         return {
             "id": res.id,
             "api_server": res.api_server
@@ -36,6 +41,9 @@ def get_config():
     except Exception as e:
         session.rollback()
         sys_logger.error(f"Error: {e}")
-        raise e
+        return {
+            "id": 0,
+            "api_server": "http://localhost:8000/api/ais_bulk"
+        }
     finally:
         session.close()

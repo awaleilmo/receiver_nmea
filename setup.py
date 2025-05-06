@@ -1,7 +1,10 @@
 import PyInstaller.__main__
 import os
 import sys
+import sqlite3
 import platform as sys_platform
+import subprocess
+import datetime
 from shutil import which
 
 APP_NAME = "SeaScope_Receiver"
@@ -95,9 +98,52 @@ def get_additional_data(platform):
                 data.append(entry)
     return data
 
+
+def prepare_database():
+    print("\n🛠️ Menyiapkan database...")
+
+    db_path = "nmea_data.db"
+
+    if not os.path.exists(db_path):
+        print(f"Creating new database: {db_path}")
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+
+        print("Creating tables...")
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS config (
+                id INTEGER PRIMARY KEY,
+                api_server TEXT,
+                created_at TIMESTAMP,
+                updated_at TIMESTAMP
+            )
+        ''')
+
+        # default config
+        print("Menambahkan default configuration...")
+        now = datetime.datetime.utcnow().isoformat()
+        cursor.execute("SELECT COUNT(*) FROM config")
+        if cursor.fetchone()[0] == 0:
+            cursor.execute('''
+                INSERT INTO config (api_server, created_at, updated_at)
+                VALUES (?, ?, ?)
+            ''', ("http://localhost:8000/api/ais_bulk", now, now))
+
+        conn.commit()
+        conn.close()
+        print("✅ initiasi database selesai!")
+    else:
+        print(f"Using existing database: {db_path}")
+
+    if db_path not in ADDITIONAL_FILES:
+        ADDITIONAL_FILES.append(db_path)
+
+
 def build_app():
     platform = get_target_platform()
     is_windows = platform == 'windows'
+
+    prepare_database()
 
     icon_file = get_icon_path(platform)
     if not icon_file:
@@ -110,13 +156,17 @@ def build_app():
         f"--distpath={OUTPUT_DIR}",
         f"--workpath=build_{platform}",
         "--add-data=migrations.py;." if is_windows else "--add-data=migrations.py:.",
+        "--add-data=nmea_data.db;." if is_windows else "--add-data=nmea_data.db:.",
+        "--hidden-import=pathlib",
+        "--hidden-import=shutil",
         "--hidden-import=PyQt6.QtCore",
         "--hidden-import=PyQt6.QtGui",
         "--hidden-import=PyQt6.QtWidgets",
         "--hidden-import=PyQt6.uic",
         "--hidden-import=sqlalchemy",
+        "--hidden-import=sqlite3",
         "--hidden-import=logging",
-        "--hidden-import=datetime"
+        "--hidden-import=datetime",
     ]
 
     # if os.path.exists("Pages"):
