@@ -11,7 +11,7 @@ from Models.Sender_model import SenderModel
 from Untils.path_helper import get_resource_path
 
 Base = declarative_base()
-db_path = get_resource_path("nmea_data.db")
+db_path = get_resource_path("nmea_data.db", is_database=True)
 engine = create_engine(f"sqlite:///{db_path}")
 
 nmea_data.__table__.create(bind=engine, checkfirst=True)

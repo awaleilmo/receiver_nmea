@@ -120,7 +120,7 @@ def prepare_database():
         ''')
 
         # default config
-        print("Adding default configuration...")
+        print("Menambahkan default configuration...")
         now = datetime.datetime.utcnow().isoformat()
         cursor.execute("SELECT COUNT(*) FROM config")
         if cursor.fetchone()[0] == 0:
