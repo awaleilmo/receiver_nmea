@@ -14,5 +14,6 @@ class SenderModel(Base):
     network = Column(String, nullable=True)
     last_send_id = Column(Integer, nullable=True, default=0)
     active = Column(Integer, nullable=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow())
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow())
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.UTC))
+    updated_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.UTC),
+                        onupdate=lambda: datetime.datetime.now(datetime.UTC))

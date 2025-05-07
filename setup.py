@@ -5,6 +5,8 @@ import sqlite3
 import platform as sys_platform
 import subprocess
 import datetime
+from datetime import timezone
+from datetime import UTC
 from shutil import which
 
 APP_NAME = "SeaScope_Receiver"
@@ -121,7 +123,11 @@ def prepare_database():
 
         # default config
         print("Menambahkan default configuration...")
-        now = datetime.datetime.utcnow().isoformat()
+        try:
+            now = datetime.datetime.now(UTC).isoformat()
+        except ImportError:
+            now = datetime.datetime.now(timezone.utc).isoformat()
+
         cursor.execute("SELECT COUNT(*) FROM config")
         if cursor.fetchone()[0] == 0:
             cursor.execute('''

@@ -12,5 +12,6 @@ class nmea_data(Base):
     connection_id = Column(Integer, nullable=True)
     nmea = Column(String, nullable=True)
     upload = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.UTC if hasattr(datetime, 'UTC') else datetime.timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.UTC if hasattr(datetime, 'UTC') else datetime.timezone.utc),
+                        onupdate=lambda: datetime.datetime.now(datetime.UTC if hasattr(datetime, 'UTC') else datetime.timezone.utc))

@@ -13,7 +13,7 @@ def save_nmea_data(data, connection_ids):
     nmea = data
 
     with Session() as session:
-        timestamp = datetime.datetime.utcnow()
+        timestamp = datetime.datetime.now(datetime.UTC if hasattr(datetime, 'UTC') else datetime.timezone.utc)
         try:
             nmea_data_res = nmea_data(nmea=nmea, connection_id=connection_id, upload=False, created_at=timestamp, updated_at=timestamp)
             session.add(nmea_data_res)
@@ -48,7 +48,8 @@ def get_ais_latest(last_send_id=None):
         if last_send_id:
             query = query.filter(nmea_data.id > last_send_id)
         else:
-            ten_seconds_ago = datetime.datetime.utcnow() - datetime.timedelta(seconds=10)
+            utc_now = datetime.datetime.now(datetime.UTC if hasattr(datetime, 'UTC') else datetime.timezone.utc)
+            ten_seconds_ago = utc_now - datetime.timedelta(seconds=10)
             query = query.filter(nmea_data.created_at >= ten_seconds_ago)
 
         query = query.order_by(nmea_data.id.asc()).limit(1000)

@@ -9,5 +9,6 @@ class ConfigModel(Base):
 
     id = Column(Integer, primary_key=True)
     api_server = Column(String, nullable=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow())
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow())
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.UTC if hasattr(datetime, 'UTC') else datetime.timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.UTC if hasattr(datetime, 'UTC') else datetime.timezone.utc),
+                       onupdate=lambda: datetime.datetime.now(datetime.UTC if hasattr(datetime, 'UTC') else datetime.timezone.utc))
