@@ -35,12 +35,14 @@ ChangesAssociations=yes
 DisableProgramGroupPage=yes
 ; Uncomment the following line to run in non administrative install mode (install for current user only).
 ;PrivilegesRequired=lowest
+PrivilegesRequired=admin
 PrivilegesRequiredOverridesAllowed=dialog
 OutputDir=C:\Users\integ\Downloads
 OutputBaseFilename=seascope_receiver
 SetupIconFile=C:\project\receiver_nmea\Assets\logo_ipm.ico
 SolidCompression=yes
 WizardStyle=modern
+SetupLogging=yes
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -50,15 +52,23 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Files]
 Source: "C:\project\receiver_nmea\dist\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\project\receiver_nmea\dist\nmea_data.db"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\project\receiver_nmea\dist\logs\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "C:\project\receiver_nmea\dist\nmea_data.db"; DestDir: "{userappdata}\{#MyAppName}"; Flags: onlyifdoesntexist uninsneveruninstall
+Source: "C:\project\receiver_nmea\dist\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
+[Dirs]
+; Create logs directory with write permissions for all users
+Name: "{app}\logs"; Permissions: users-modify
+Name: "{userappdata}\{#MyAppName}"; Permissions: users-modify
+
 [Registry]
+; File associations
 Root: HKA; Subkey: "Software\Classes\{#MyAppAssocExt}\OpenWithProgids"; ValueType: string; ValueName: "{#MyAppAssocKey}"; ValueData: ""; Flags: uninsdeletevalue
 Root: HKA; Subkey: "Software\Classes\{#MyAppAssocKey}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppAssocName}"; Flags: uninsdeletekey
 Root: HKA; Subkey: "Software\Classes\{#MyAppAssocKey}\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\{#MyAppExeName},0"
 Root: HKA; Subkey: "Software\Classes\{#MyAppAssocKey}\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" ""%1"""
+; Store database path in registry
+Root: HKA; Subkey: "Software\{#MyAppName}"; ValueType: string; ValueName: "DatabasePath"; ValueData: "{userappdata}\{#MyAppName}\nmea_data.db"; Flags: uninsdeletekey
 
 [Icons]
 Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
@@ -67,3 +77,12 @@ Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: de
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
 
+[Code]
+procedure CurStepChanged(CurStep: TSetupStep);
+begin
+  if CurStep = ssPostInstall then
+  begin
+    // Set permissions on database file
+    Exec(ExpandConstant('{cmd}'), '/C icacls "' + ExpandConstant('{userappdata}\{#MyAppName}\nmea_data.db') + '" /grant Everyone:(F)', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  end;
+end;
