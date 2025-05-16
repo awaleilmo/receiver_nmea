@@ -16,7 +16,7 @@ from Services.log_manager import LogManager
 from UI.components.main_window import BaseMainWindow
 from UI.components.system_tray import SystemTrayManager
 from Untils.path_helper import get_resource_path
-from Untils.logging_helper import error_file_logger
+from Pages.Log_page import LogViewerDialog
 
 from Workers.receiver_worker import ReceiverWorker
 from Workers.sender_worker import SenderWorker
@@ -42,7 +42,6 @@ class AISViewer(BaseMainWindow):
         self.setup_connections()
         self.setup_status_bar()
         self.setup_tray_connections()
-        self.setup_error_logging()
 
         self.setup_signals()
         self.restore_window_state()
@@ -52,7 +51,6 @@ class AISViewer(BaseMainWindow):
         self.worker_controller.status_changed.connect(self._handle_worker_status)
 
         self.log_manager.log_received.connect(self.update_logger)
-        self.log_manager.error_received.connect(self.update_error)
         self.log_manager.info_received.connect(self.update_info)
         self.log_manager.warning_received.connect(self.update_warning)
 
@@ -118,6 +116,7 @@ class AISViewer(BaseMainWindow):
     def setup_signals(self):
 
         self.actionExit.triggered.connect(self.exit)
+        self.actionLogs.triggered.connect(self.show_log_viewer)
         self.actionConfigure.triggered.connect(self.showConfigure)
         self.actionConnections.triggered.connect(self.showConnection)
         self.actionRun_Receiver.triggered.connect(self.start_receiver)
@@ -129,7 +128,6 @@ class AISViewer(BaseMainWindow):
 
         # Logger signals
         signalsLogger.new_data_received.connect(self.update_logger)
-        signalsError.new_data_received.connect(self.update_error)
         signalsInfo.new_data_received.connect(self.update_info)
         signalsWarning.new_data_received.connect(self.update_warning)
 
@@ -155,18 +153,6 @@ class AISViewer(BaseMainWindow):
         status_layout.addStretch(1)
 
         self.statusbar.addPermanentWidget(status_widget, 0)
-
-    def setup_error_logging(self):
-        self.error_buffer = []
-        self.error_timer = QTimer()
-        self.error_timer.setInterval(1000)
-        self.error_timer.timeout.connect(self.flush_error_buffer)
-        self.error_timer.start()
-
-    def flush_error_buffer(self):
-        for msg in self.error_buffer:
-            error_file_logger.error(msg)
-        self.error_buffer.clear()
 
     def restore_window_state(self):
         settings = QSettings("IPM", "SeaScope_Receiver")
@@ -198,24 +184,6 @@ class AISViewer(BaseMainWindow):
 
         self.plainTextLogger.verticalScrollBar().setValue(
             self.plainTextLogger.verticalScrollBar().maximum()
-        )
-
-    def update_error(self, message):
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        error_message = f"{timestamp} - 🚨 ERROR: {message}"
-
-        # Set emoji font
-        emoji_font = QFont("Noto Color Emoji")
-        emoji_font.setPointSize(10)
-        self.plainTextError.setFont(emoji_font)
-        self.plainTextError.appendPlainText(error_message)
-        self.error_buffer.append(message)
-        if self.plainTextError.blockCount() > self.MAX_LOG_ITEMS:
-            current_text = self.plainTextError.toPlainText()
-            new_text = '\n'.join(current_text.split('\n')[1:])
-            self.plainTextError.setPlainText(new_text)
-        self.plainTextError.verticalScrollBar().setValue(
-            self.plainTextError.verticalScrollBar().maximum()
         )
 
     def update_info(self, message):
@@ -351,4 +319,8 @@ class AISViewer(BaseMainWindow):
     def _show_connection_window(self):
         dlg = ConnectionWindow(self)
         dlg.data_saved.connect(self.start_receiver)
+        dlg.exec()
+
+    def show_log_viewer(self):
+        dlg = LogViewerDialog(self)
         dlg.exec()

@@ -76,13 +76,3 @@ Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: de
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
-
-[Code]
-procedure CurStepChanged(CurStep: TSetupStep);
-begin
-  if CurStep = ssPostInstall then
-  begin
-    // Set permissions on database file
-    Exec(ExpandConstant('{cmd}'), '/C icacls "' + ExpandConstant('{userappdata}\{#MyAppName}\nmea_data.db') + '" /grant Everyone:(F)', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
-  end;
-end;
