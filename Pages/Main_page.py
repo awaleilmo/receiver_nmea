@@ -295,15 +295,29 @@ class AISViewer(BaseMainWindow):
         self.worker_controller.stop_worker('receiver')
         self.worker_controller.stop_worker('sender')
         self.worker_controller.stop_worker('upload')
-        self._close_progress()
-        self._open_config_window()
+        self.actionRun_Receiver.setEnabled(True)
+        self.actionStop_Receiver.setEnabled(False)
+        self.actionRun_Uploader.setEnabled(True)
+        self.actionStop_Uploader.setEnabled(False)
+        self.actionRun_Sender_OpenCPN.setEnabled(True)
+        self.actionStop_Sender_OpenCPN.setEnabled(False)
+        QTimer.singleShot(200, lambda: [
+            self._close_progress(),
+            self._open_config_window()
+        ])
 
     def _open_config_window(self):
         dlg = ConfigureWindow(self)
         dlg.data_saved.connect(lambda: [
             self.worker_controller.start_worker('receiver', ReceiverWorker),
             self.worker_controller.start_worker('upload', UploadWorker),
-            self.worker_controller.start_worker('sender', SenderWorker)
+            self.worker_controller.start_worker('sender', SenderWorker),
+            self.actionRun_Receiver.setEnabled(False),
+            self.actionStop_Receiver.setEnabled(True),
+            self.actionRun_Uploader.setEnabled(False),
+            self.actionStop_Uploader.setEnabled(True),
+            self.actionRun_Sender_OpenCPN.setEnabled(False),
+            self.actionStop_Sender_OpenCPN.setEnabled(True)
         ])
         dlg.exec()
 
@@ -314,11 +328,17 @@ class AISViewer(BaseMainWindow):
             self._close_progress()
             self._show_connection_window()
 
+        self.actionRun_Receiver.setEnabled(True)
+        self.actionStop_Receiver.setEnabled(False)
         self.worker_controller.stop_worker('receiver', stop_callback)
 
     def _show_connection_window(self):
         dlg = ConnectionWindow(self)
-        dlg.data_saved.connect(self.start_receiver)
+        dlg.data_saved.connect(lambda: [
+            self.worker_controller.start_worker('receiver', ReceiverWorker),
+            self.actionRun_Receiver.setEnabled(False),
+            self.actionStop_Receiver.setEnabled(True)
+        ])
         dlg.exec()
 
     def show_log_viewer(self):
