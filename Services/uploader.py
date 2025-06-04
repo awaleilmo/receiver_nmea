@@ -4,13 +4,18 @@ import json
 from datetime import datetime, timedelta
 
 from Controllers.NMEA_controller import get_pending_data, mark_data_as_sent
-from Controllers.Configure_controller import get_config
 from Services.SignalsMessages import signalsError, signalsWarning, signalsLogger
 from Services.decoder import decode_ais
 from requests.exceptions import RequestException, Timeout, ConnectionError
 from Untils.logging_helper import sys_logger
+import configparser
+from Untils.path_helper import get_resource_path
 
-API_URL = get_config()['api_server']
+config_path = get_resource_path("config.ini")
+config = configparser.ConfigParser()
+config.read(config_path)
+
+API_URL = config['API']['AIS']
 MAX_RETRIES = 3
 TIMEOUT = 15
 BATCH_SIZE = 300

@@ -8,14 +8,11 @@ import serial
 import ais
 
 from Controllers.NMEA_controller import save_nmea_data, batch_save_nmea
-from Controllers.Configure_controller import get_config
 from Controllers.Connection_controller import get_connection
 
 from Services.SignalsMessages import signalsError, signalsInfo, signalsLogger
 
 ais_buffer = {}
-
-LARAVEL_API_URL = get_config()['api_server']
 
 def receive_nmea_tcp(host, port, stop_event, connection_id):
     while not stop_event.is_set():

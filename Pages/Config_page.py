@@ -2,12 +2,13 @@ from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import QDialog, QGroupBox, QGridLayout, QLabel, QCheckBox, QWidget, QVBoxLayout, QMessageBox
 from PyQt6.uic import loadUi
 from PyQt6.QtCore import pyqtSignal
-from Controllers.Configure_controller import get_config, update_config
+from Controllers.Configure_controller import update_config
 from Controllers.Sender_controller import get_sender, update_sender_status, remove_sender
 from Models import SenderModel
 from Services.SignalsMessages import signalsError, signalsWarning, signalsInfo
 from Untils.path_helper import get_resource_path
 from Pages.Add_Sender_page import AddSenderWindow
+import configparser
 
 
 class ConfigureWindow(QDialog):
@@ -30,16 +31,17 @@ class ConfigureWindow(QDialog):
 
         self.connection_checkboxes = {}
 
-        config = get_config()
-        self.apiServer.setText(config['api_server'])
-
         self.buttonBox.accepted.connect(self.save_config) # Save
 
         self.load_data()
 
     def save_config(self):
         try:
-            api_server = self.apiServer.text()
+            config_path = get_resource_path("config.ini")
+            config = configparser.ConfigParser()
+            config.read(config_path)
+
+            api_server = config['API']['AIS']
 
             for conn_id, checkbox in self.connection_checkboxes.items():
                 try:
@@ -50,9 +52,8 @@ class ConfigureWindow(QDialog):
                     error_msg = f"Error updating sender {conn_id}: {str(e)}"
                     signalsError.new_data_received.emit(error_msg)
                     signalsError.new_data_received.emit(error_msg)
-            update_config(api_server)
-
             self.data_saved.emit()
+            update_config(api_server)
 
         except Exception as e:
             from Services.SignalsMessages import signalsError

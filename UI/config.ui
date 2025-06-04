@@ -82,45 +82,6 @@
      <number>5</number>
     </property>
     <item row="0" column="0" colspan="2">
-     <widget class="QFrame" name="frame_2">
-      <property name="minimumSize">
-       <size>
-        <width>500</width>
-        <height>40</height>
-       </size>
-      </property>
-      <property name="frameShape">
-       <enum>QFrame::Shape::StyledPanel</enum>
-      </property>
-      <property name="frameShadow">
-       <enum>QFrame::Shadow::Raised</enum>
-      </property>
-      <widget class="QLabel" name="label_6">
-       <property name="geometry">
-        <rect>
-         <x>10</x>
-         <y>10</y>
-         <width>52</width>
-         <height>22</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>API HOST</string>
-       </property>
-      </widget>
-      <widget class="QLineEdit" name="apiServer">
-       <property name="geometry">
-        <rect>
-         <x>80</x>
-         <y>10</y>
-         <width>391</width>
-         <height>22</height>
-        </rect>
-       </property>
-      </widget>
-     </widget>
-    </item>
-    <item row="1" column="0" colspan="2">
      <widget class="QFrame" name="frame">
       <property name="minimumSize">
        <size>
@@ -220,7 +181,7 @@
       </widget>
      </widget>
     </item>
-    <item row="2" column="0" colspan="2">
+    <item row="1" column="0" colspan="2">
      <widget class="QScrollArea" name="scrollArea">
       <property name="widgetResizable">
        <bool>true</bool>
@@ -231,7 +192,7 @@
          <x>0</x>
          <y>0</y>
          <width>519</width>
-         <height>417</height>
+         <height>458</height>
         </rect>
        </property>
       </widget>

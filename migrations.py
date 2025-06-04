@@ -4,6 +4,8 @@ from sqlalchemy import inspect, text
 from sqlalchemy.orm import sessionmaker, close_all_sessions
 from Models import Base, engine, ConfigModel, ConnectionModel, SenderModel
 import os
+import configparser
+from Untils.path_helper import get_resource_path
 
 def reset_database_connection():
     print("\n Mereset koneksi database...")
@@ -137,11 +139,14 @@ def run_seeder():
 
     Session = sessionmaker(bind=engine)
     session = Session()
+    config_path = get_resource_path("config.ini")
+    config = configparser.ConfigParser()
+    config.read(config_path)
 
     try:
         # Data Config
         config_data = [
-            ConfigModel(api_server="http://localhost:8000/api/ais_bulk"),
+            ConfigModel(api_server=config['API']['AIS']),
             # Tambahkan data config lain jika diperlukan
         ]
 
