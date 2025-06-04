@@ -163,6 +163,7 @@ def build_app():
         f"--workpath=build_{platform}",
         "--add-data=migrations.py;." if is_windows else "--add-data=migrations.py:.",
         "--add-data=nmea_data.db;." if is_windows else "--add-data=nmea_data.db:.",
+        "--add-data=config.ini;." if is_windows else "--add-data=config.ini:.",
         "--hidden-import=pathlib",
         "--hidden-import=shutil",
         "--hidden-import=PyQt6.QtCore",
