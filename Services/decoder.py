@@ -1,22 +1,25 @@
 import ais
 import time
+import json
+import re
 
-ais_buffer = {}  # Buffer untuk menyimpan fragment AIS
+from Untils.logging_helper import sys_logger
+
+ais_buffer = {}
 ais_buffer_time = {}
 
 
 def try_decode(payload):
     """Coba decode dengan versi terbaik berdasarkan tipe pesan."""
     try:
-        msg_type = int(payload[:6], 2)  # Ambil 6 bit pertama sebagai angka
+        msg_type = int(payload[:6], 2)
     except ValueError:
-        msg_type = 0  # Jika gagal deteksi, pakai versi default
+        msg_type = 0
 
-    # Gunakan `version=2` dulu untuk pesan AIS tertentu
     if msg_type in {5, 19, 21, 24}:
-        versions = [2, 0, 1]  # Coba 2 dulu, lalu 0, lalu 1
+        versions = [2, 0, 1]
     else:
-        versions = [0, 1, 2]  # Coba dari 0, lalu 1, lalu 2 untuk pesan lain
+        versions = [0, 1, 2]
 
     for version in versions:
         try:
@@ -28,18 +31,17 @@ def try_decode(payload):
             continue
     return None, None  # Jika semua gagal, kembalikan None
 
-
 def decode_ais(nmea_sentence):
     """Gabungkan multi-fragment AIS sebelum decoding."""
     try:
         parts = nmea_sentence.split(",")
 
         if len(parts) > 5:
-            fragment_count = int(parts[1])  # Total fragment
-            fragment_number = int(parts[2])  # Nomor fragment saat ini
-            message_id = parts[3]  # ID unik pesan multi-fragment
-            channel = parts[4]  # A/B
-            payload = parts[5]  # Gunakan payload asli tanpa modifikasi
+            fragment_count = int(parts[1])
+            fragment_number = int(parts[2])
+            message_id = parts[3]
+            channel = parts[4]
+            payload = parts[5]
 
             unique_key = f"{message_id}_{channel}"
 
@@ -55,20 +57,18 @@ def decode_ais(nmea_sentence):
 
                 return decoded_data
 
-            # Multi-fragment handling
             if unique_key not in ais_buffer:
-                ais_buffer[unique_key] = [""] * fragment_count  # Buffer untuk semua fragment
-                ais_buffer[unique_key + "_received"] = set()  # Simpan fragment yang sudah diterima
-                ais_buffer_time[unique_key] = time.time()  # Simpan waktu saat fragment pertama diterima
+                ais_buffer[unique_key] = [""] * fragment_count
+                ais_buffer[unique_key + "_received"] = set()
+                ais_buffer_time[unique_key] = time.time()
 
-            ais_buffer[unique_key][fragment_number - 1] = payload  # Simpan fragment ke posisi yang sesuai
-            ais_buffer[unique_key + "_received"].add(fragment_number)  # Tandai fragment yang diterima
+            ais_buffer[unique_key][fragment_number - 1] = payload
+            ais_buffer[unique_key + "_received"].add(fragment_number)
 
-            # Jika semua fragment sudah terkumpul, gabungkan dan decode
             if len(ais_buffer[unique_key + "_received"]) == fragment_count:
-                full_payload = "".join(ais_buffer.pop(unique_key))  # Gabungkan fragment
-                ais_buffer.pop(unique_key  + "_received")  # Hapus record fragment yang diterima
-                ais_buffer_time.pop(unique_key , None)  # Hapus timestamp buffer
+                full_payload = "".join(ais_buffer.pop(unique_key))
+                ais_buffer.pop(unique_key + "_received")
+                ais_buffer_time.pop(unique_key, None)
 
                 try:
                     decoded_data, version = try_decode(full_payload)
@@ -86,18 +86,18 @@ def decode_ais(nmea_sentence):
                 except Exception as e:
                     return None
 
-            # **Tambahkan mekanisme timeout (5 detik)**
-            if time.time() - ais_buffer_time.get(unique_key , 0) > 60:
-                ais_buffer.pop(unique_key , None)
-                ais_buffer.pop(unique_key  + "_received", None)
-                ais_buffer_time.pop(unique_key , None)
+            if time.time() - ais_buffer_time.get(unique_key, 0) > 60:
+                ais_buffer.pop(unique_key, None)
+                ais_buffer.pop(unique_key + "_received", None)
+                ais_buffer_time.pop(unique_key, None)
                 return None
 
-            return None  # Fragment belum lengkap, tunggu dulu
+            return None
 
         else:
             return None
 
 
     except Exception as e:
+        sys_logger.error(f"Failed to decode: {nmea_sentence}, error: {str(e)}")
         return None

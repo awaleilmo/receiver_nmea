@@ -15,59 +15,6 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout_2">
-    <item row="1" column="0">
-     <widget class="QTabWidget" name="tabWidget">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="minimumSize">
-       <size>
-        <width>1030</width>
-        <height>45</height>
-       </size>
-      </property>
-      <property name="maximumSize">
-       <size>
-        <width>16777215</width>
-        <height>16777215</height>
-       </size>
-      </property>
-      <property name="currentIndex">
-       <number>0</number>
-      </property>
-      <widget class="QWidget" name="TabLogger">
-       <attribute name="title">
-        <string>Logger</string>
-       </attribute>
-       <layout class="QVBoxLayout" name="verticalLayout">
-        <item>
-         <widget class="QPlainTextEdit" name="plainTextLogger">
-          <property name="readOnly">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-      <widget class="QWidget" name="TabError">
-       <attribute name="title">
-        <string>Errors</string>
-       </attribute>
-       <layout class="QHBoxLayout" name="horizontalLayout">
-        <item>
-         <widget class="QPlainTextEdit" name="plainTextError">
-          <property name="readOnly">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-     </widget>
-    </item>
     <item row="0" column="0">
      <widget class="QFrame" name="frame">
       <property name="maximumSize">
@@ -98,6 +45,51 @@
       </layout>
      </widget>
     </item>
+    <item row="1" column="0">
+     <widget class="QTabWidget" name="tabWidget">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="minimumSize">
+       <size>
+        <width>1030</width>
+        <height>45</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <property name="focusPolicy">
+       <enum>Qt::FocusPolicy::WheelFocus</enum>
+      </property>
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <widget class="QWidget" name="TabLogger">
+       <attribute name="title">
+        <string>Logger</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout">
+        <item>
+         <widget class="QPlainTextEdit" name="plainTextLogger">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
    </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -106,7 +98,7 @@
      <x>0</x>
      <y>0</y>
      <width>1048</width>
-     <height>23</height>
+     <height>33</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -121,6 +113,8 @@
     </property>
     <addaction name="actionConfigure"/>
     <addaction name="actionConnections"/>
+    <addaction name="separator"/>
+    <addaction name="actionLogs"/>
    </widget>
    <widget class="QMenu" name="menuRun">
     <property name="title">
@@ -132,6 +126,9 @@
     <addaction name="separator"/>
     <addaction name="actionRun_Sender_OpenCPN"/>
     <addaction name="actionStop_Sender_OpenCPN"/>
+    <addaction name="separator"/>
+    <addaction name="actionRun_Uploader"/>
+    <addaction name="actionStop_Uploader"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuRun"/>
@@ -139,8 +136,14 @@
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionExit">
+   <property name="icon">
+    <iconset theme="system-shutdown"/>
+   </property>
    <property name="text">
     <string>Exit</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Q</string>
    </property>
    <property name="iconVisibleInMenu">
     <bool>true</bool>
@@ -150,8 +153,14 @@
    </property>
   </action>
   <action name="actionConfigure">
+   <property name="icon">
+    <iconset theme="applications-development"/>
+   </property>
    <property name="text">
     <string>Configure</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O, C</string>
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::TextHeuristicRole</enum>
@@ -187,7 +196,7 @@
     <iconset theme="media-playback-start"/>
    </property>
    <property name="text">
-    <string>Run Sender OpenCPN</string>
+    <string>Run Sender</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+Shift+R</string>
@@ -201,15 +210,54 @@
     <iconset theme="media-playback-stop"/>
    </property>
    <property name="text">
-    <string>Stop Sender OpenCPN</string>
+    <string>Stop Sender</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+Shift+T</string>
    </property>
   </action>
   <action name="actionConnections">
+   <property name="icon">
+    <iconset theme="emblem-symbolic-link"/>
+   </property>
    <property name="text">
     <string>Connections</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O, I</string>
+   </property>
+  </action>
+  <action name="actionRun_Uploader">
+   <property name="icon">
+    <iconset theme="media-playback-start"/>
+   </property>
+   <property name="text">
+    <string>Run Uploader</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Alt+R</string>
+   </property>
+  </action>
+  <action name="actionStop_Uploader">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset theme="media-playback-stop"/>
+   </property>
+   <property name="text">
+    <string>Stop Uploader</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Alt+T</string>
+   </property>
+  </action>
+  <action name="actionLogs">
+   <property name="icon">
+    <iconset theme="accessories-dictionary"/>
+   </property>
+   <property name="text">
+    <string>Logs</string>
    </property>
   </action>
  </widget>
