@@ -100,6 +100,16 @@ def get_additional_data(platform):
                 data.append(entry)
     return data
 
+def prepare_config():
+    print("\n🛠️ Memeriksa config.ini...")
+    if not os.path.exists('config.ini'):
+        print("⚠️ Membuat config.ini default")
+        with open('config.ini', 'w') as f:
+            f.write("""[API]
+AIS = http://localhost:3002/api/v1/ais/bulk
+GET_STATION = http://localhost:3002/api/v1/station/check
+POST_STATION = http://localhost:3002/api/v1/station
+""")
 
 def prepare_database():
     print("\n🛠️ Menyiapkan database...")
@@ -149,6 +159,7 @@ def build_app():
     platform = get_target_platform()
     is_windows = platform == 'windows'
 
+    prepare_config()
     prepare_database()
 
     icon_file = get_icon_path(platform)
@@ -163,7 +174,6 @@ def build_app():
         f"--workpath=build_{platform}",
         "--add-data=migrations.py;." if is_windows else "--add-data=migrations.py:.",
         "--add-data=nmea_data.db;." if is_windows else "--add-data=nmea_data.db:.",
-        "--add-data=config.ini;." if is_windows else "--add-data=config.ini:.",
         "--hidden-import=pathlib",
         "--hidden-import=shutil",
         "--hidden-import=PyQt6.QtCore",
