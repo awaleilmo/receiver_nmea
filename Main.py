@@ -40,6 +40,24 @@ def Checkmigrate():
         return True
 
 
+def initialize_config():
+    """
+    Memastikan config.ini ada dengan konten default
+    Return: path ke config.ini
+    """
+    config_path = get_resource_path("config.ini")
+
+    if not os.path.exists(config_path):
+        print("🛠 Membuat config.ini baru...")
+        default_config = """[API]
+AIS = http://localhost:3002/api/v1/ais/bulk
+GET_STATION = http://localhost:3002/api/v1/station/check
+POST_STATION = http://localhost:3002/api/v1/station
+"""
+        with open(config_path, 'w') as f:
+            f.write(default_config)
+    return config_path
+
 def MigrateRun():
     try:
 
@@ -58,6 +76,10 @@ def MigrateRun():
 
 
 if __name__ == "__main__":
+    # Inisialisasi config (hanya dibuat jika belum ada)
+    config_file = initialize_config()
+    print(f"✅ Config file: {config_file}")
+
     # Cek migrate
     if Checkmigrate():
         print("Database belum setup, menjalankan migrasi...")

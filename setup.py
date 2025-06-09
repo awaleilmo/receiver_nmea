@@ -20,7 +20,7 @@ ADDITIONAL_FILES = [
     "Models/",
     "Services/",
     "Workers/",
-    "requirements.txt"
+    "requirements.txt",
 ]
 OUTPUT_DIR = "dist"
 VERSION = "1.0.0"
