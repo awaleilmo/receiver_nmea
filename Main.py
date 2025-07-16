@@ -1,3 +1,4 @@
+import configparser
 import sys
 import os
 import sqlite3
@@ -8,14 +9,6 @@ from PyQt6.QtWidgets import QApplication
 from Pages.Main_page import AISViewer
 from Untils.path_helper import get_resource_path
 
-def get_app_dir():
-    """Mendapatkan direktori tempat aplikasi dijalankan"""
-    if getattr(sys, 'frozen', False):
-        # Jika dijalankan sebagai executable (PyInstaller)
-        return os.path.dirname(sys.executable)
-    else:
-        # Jika dijalankan sebagai script Python
-        return os.path.dirname(os.path.abspath(__file__))
 
 def Checkmigrate():
     try:
@@ -50,23 +43,20 @@ def Checkmigrate():
 
 def initialize_config():
     """Membuat config.ini di folder yang sama dengan executable"""
-    app_dir = get_app_dir()
-    config_path = os.path.join(app_dir, "config.ini")
+    config_path = get_resource_path("config.ini", is_config=True)
 
     print(f"🛠 Mencoba membuat config.ini di: {config_path}")  # Debug
 
-    # Pastikan folder ada
-    try:
-        os.makedirs(app_dir, exist_ok=True)
-    except Exception as e:
-        print(f"⚠️ Gagal membuat folder: {e}")
+    config_dir = os.path.dirname(config_path)
+    if config_dir:
+        os.makedirs(config_dir, exist_ok=True)
 
     if not os.path.exists(config_path):
         print("🛠 Membuat config.ini baru...")
         default_config = """[API]
-AIS = http://localhost:3002/api/v1/ais/bulk
-GET_STATION = http://localhost:3002/api/v1/station/check
-POST_STATION = http://localhost:3002/api/v1/station
+AIS = https://bytenusa.cloud/api/v1/ais/bulk
+GET_STATION = https://bytenusa.cloud/api/v1/station/check
+POST_STATION = https://bytenusa.cloud/api/v1/station
 """
         try:
             with open(config_path, 'w') as f:

@@ -139,7 +139,7 @@ def run_seeder():
 
     Session = sessionmaker(bind=engine)
     session = Session()
-    config_path = get_resource_path("config.ini")
+    config_path = get_resource_path("config.ini", is_config=True)
     config = configparser.ConfigParser()
     config.read(config_path)
 

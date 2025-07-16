@@ -11,7 +11,7 @@ from Untils.logging_helper import sys_logger
 import configparser
 from Untils.path_helper import get_resource_path
 
-config_path = get_resource_path("config.ini")
+config_path = get_resource_path("config.ini", is_config=True)
 config = configparser.ConfigParser()
 config.read(config_path)
 
@@ -24,6 +24,8 @@ RETRY_DELAY = 30
 def send_batch_data(stop_event):
     retry_count = 0
     last_success_time = datetime.now()
+
+    sys_logger.info(f'{API_URL}')
 
     while not stop_event.is_set():
         try:
