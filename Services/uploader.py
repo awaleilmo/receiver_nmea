@@ -3,7 +3,7 @@ import time
 import json
 from datetime import datetime, timedelta
 
-from Controllers.NMEA_controller import get_pending_data, mark_data_as_sent
+from Controllers.NMEA_controller import get_pending_data, mark_data_as_sent, mark_data_as_failed, get_pending_count
 from Services.SignalsMessages import signalsError, signalsWarning, signalsLogger
 from Services.decoder import decode_ais
 from requests.exceptions import RequestException, Timeout, ConnectionError
@@ -18,7 +18,7 @@ config.read(config_path)
 API_URL = config['API']['AIS']
 MAX_RETRIES = 3
 TIMEOUT = 15
-BATCH_SIZE = 300
+BATCH_SIZE = 5000
 RETRY_DELAY = 30
 
 def send_batch_data(stop_event):
