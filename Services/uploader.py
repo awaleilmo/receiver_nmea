@@ -47,7 +47,7 @@ def send_batch_data(stop_event):
 
             # 1. Check total pending data
             total_pending = get_today_pending_count()
-            sys_logger.info(f"📊 Total pending data in database: {total_pending}")
+            sys_logger.info(f"📊 Total pending data TODAY in database: {total_pending}")
 
             # 2. Get data from database
             data = get_today_pending_data(BATCH_SIZE)
