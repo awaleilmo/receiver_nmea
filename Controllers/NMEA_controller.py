@@ -9,6 +9,7 @@ from Services.SignalsMessages import signalsLogger
 # Buat session factory
 Session = sessionmaker(bind=engine)
 
+
 def save_nmea_data(data, connection_ids):
     connection_id = connection_ids
     nmea = data
@@ -16,12 +17,14 @@ def save_nmea_data(data, connection_ids):
     with Session() as session:
         timestamp = datetime.datetime.now(datetime.UTC if hasattr(datetime, 'UTC') else datetime.timezone.utc)
         try:
-            nmea_data_res = nmea_data(nmea=nmea, connection_id=connection_id, upload=False, created_at=timestamp, updated_at=timestamp)
+            nmea_data_res = nmea_data(nmea=nmea, connection_id=connection_id, upload=False, created_at=timestamp,
+                                      updated_at=timestamp)
             session.add(nmea_data_res)
             session.commit()
         except Exception as e:
             session.rollback()
             raise e
+
 
 def batch_save_nmea(nmea_raw, connection_ids):
     lines = nmea_raw.strip().splitlines()
@@ -31,10 +34,17 @@ def batch_save_nmea(nmea_raw, connection_ids):
             signalsLogger.new_data_received.emit(f"Diterima: {line}")
             save_nmea_data(line, connection_ids)
 
-def get_pending_data(batas=350):
+
+def get_today_pending_data(batas=350):
     with Session() as session:
         try:
-            query = session.query(nmea_data).filter_by(upload=False).order_by(nmea_data.created_at).limit(batas).all()
+            today_start = datetime.datetime.now(
+                datetime.UTC if hasattr(datetime, 'UTC') else datetime.timezone.utc).replace(hour=0, minute=0, second=0,
+                                                                                             microsecond=0)
+            query = session.query(nmea_data).filter(
+                nmea_data.upload == False,
+                nmea_data.created_at >= today_start
+            ).order_by(nmea_data.created_at).limit(batas).all()
 
             result = []
             for item in query:
@@ -50,14 +60,52 @@ def get_pending_data(batas=350):
             session.rollback()
             raise e
 
-def get_pending_count():
+
+def get_today_pending_count():
     with Session() as session:
         try:
-            count = session.query(func.count(nmea_data.id)).filter_by(upload=False).scalar()
+            today_start = datetime.datetime.now(
+                datetime.UTC if hasattr(datetime, 'UTC') else datetime.timezone.utc).replace(hour=0, minute=0, second=0,
+                                                                                             microsecond=0)
+
+            count = session.query(nmea_data).filter(
+                nmea_data.upload == False,
+                nmea_data.created_at >= today_start
+            ).count()
             return count
         except Exception as e:
             session.rollback()
             raise e
+
+
+def get_old_data_stats():
+    """
+    Statistik data lama (sebelum hari ini)
+    """
+    with Session() as session:
+        try:
+            today_start = datetime.now(datetime.UTC if hasattr(datetime, 'UTC') else datetime.timezone.utc).replace(
+                hour=0, minute=0, second=0, microsecond=0)
+
+            old_pending = session.query(nmea_data).filter(
+                nmea_data.upload == False,
+                nmea_data.created_at < today_start
+            ).count()
+
+            old_uploaded = session.query(nmea_data).filter(
+                nmea_data.upload == True,
+                nmea_data.created_at < today_start
+            ).count()
+
+            return {
+                'old_pending': old_pending,
+                'old_uploaded': old_uploaded,
+                'total_old': old_pending + old_uploaded
+            }
+        except Exception as e:
+            session.rollback()
+            raise e
+
 
 def mark_data_as_sent(ids):
     if not ids:
@@ -75,6 +123,7 @@ def mark_data_as_sent(ids):
             session.rollback()
             signalsLogger.new_data_received.emit(f"Error marking data as sent: {str(e)}")
             raise e
+
 
 def mark_data_as_failed(ids, reason="decode_failed"):
     """
@@ -98,8 +147,8 @@ def mark_data_as_failed(ids, reason="decode_failed"):
             signalsLogger.new_data_received.emit(f"Error marking failed data: {str(e)}")
             raise e
 
-def get_decode_stats():
 
+def get_decode_stats():
     with Session() as session:
         try:
 
@@ -111,43 +160,48 @@ def get_decode_stats():
             session.rollback()
             raise e
 
-def get_recent_activity():
 
+def get_recent_activity():
     with Session() as session:
         try:
-            one_hour_ago = datetime.datetime.now(datetime.UTC if hasattr(datetime, 'UTC') else datetime.timezone.utc) - datetime.timedelta(hours=1)
+            one_hour_ago = datetime.datetime.now(
+                datetime.UTC if hasattr(datetime, 'UTC') else datetime.timezone.utc) - datetime.timedelta(hours=1)
 
-            recent_additions = session.query(func.count(nmea_data.id)).filter(nmea_data.created_at >= one_hour_ago).scalar()
+            recent_additions = session.query(func.count(nmea_data.id)).filter(
+                nmea_data.created_at >= one_hour_ago).scalar()
 
-            recent_uploads = session.query(func.count(nmea_data.id)).filter(nmea_data.upload == True, nmea_data.created_at >= one_hour_ago).scalar()
+            recent_uploads = session.query(func.count(nmea_data.id)).filter(nmea_data.upload == True,
+                                                                            nmea_data.created_at >= one_hour_ago).scalar()
 
             return {'recent_additions': recent_additions, 'recent_uploads': recent_uploads}
         except Exception as e:
             session.rollback()
             raise e
 
+
 def get_ais_latest(last_send_id=None):
     with Session() as session:
-       try:
-           query = session.query(nmea_data.id, nmea_data.nmea)
-           if last_send_id:
-               query = query.filter(nmea_data.id > last_send_id)
-           else:
-               utc_now = datetime.datetime.now(datetime.UTC if hasattr(datetime, 'UTC') else datetime.timezone.utc)
-               ten_seconds_ago = utc_now - datetime.timedelta(seconds=10)
-               query = query.filter(nmea_data.created_at >= ten_seconds_ago)
-           query = query.order_by(nmea_data.id.asc()).limit(1000)
-           result = session.execute(query).fetchall()
-           return result
-       except Exception as e:
-           session.rollback()
-           raise e
+        try:
+            query = session.query(nmea_data.id, nmea_data.nmea)
+            if last_send_id:
+                query = query.filter(nmea_data.id > last_send_id)
+            else:
+                utc_now = datetime.datetime.now(datetime.UTC if hasattr(datetime, 'UTC') else datetime.timezone.utc)
+                ten_seconds_ago = utc_now - datetime.timedelta(seconds=10)
+                query = query.filter(nmea_data.created_at >= ten_seconds_ago)
+            query = query.order_by(nmea_data.id.asc()).limit(1000)
+            result = session.execute(query).fetchall()
+            return result
+        except Exception as e:
+            session.rollback()
+            raise e
+
 
 def reset_failed_uploads():
-
     with Session() as session:
         try:
-            old_timestamp = datetime.datetime.now(datetime.UTC if hasattr(datetime, 'UTC') else datetime.timezone.utc) - datetime.timedelta(hours=2)
+            old_timestamp = datetime.datetime.now(
+                datetime.UTC if hasattr(datetime, 'UTC') else datetime.timezone.utc) - datetime.timedelta(hours=2)
 
             reset_count = session.query(nmea_data).filter(
                 nmea_data.upload == True,
@@ -157,6 +211,85 @@ def reset_failed_uploads():
             session.commit()
             signalsLogger.new_data_received.emit(f"Reset {reset_count} potentially stuck records")
             return reset_count
+        except Exception as e:
+            session.rollback()
+            raise e
+
+
+def get_historical_data_stats():
+    """Get statistics for historical data (before today)"""
+    with Session() as session:
+        try:
+            today_start = datetime.datetime.now(
+                datetime.UTC if hasattr(datetime, 'UTC') else datetime.timezone.utc).replace(hour=0, minute=0, second=0,
+                                                                                             microsecond=0)
+
+            # Get date range of historical data
+            oldest = session.query(func.min(nmea_data.created_at)).filter(
+                nmea_data.upload == False,
+                nmea_data.created_at < today_start
+            ).scalar()
+
+            newest = session.query(func.max(nmea_data.created_at)).filter(
+                nmea_data.upload == False,
+                nmea_data.created_at < today_start
+            ).scalar()
+
+            total_pending = session.query(func.count(nmea_data.id)).filter(
+                nmea_data.upload == False,
+                nmea_data.created_at < today_start
+            ).scalar()
+
+            return {
+                'total_pending': total_pending,
+                'oldest_date': oldest,
+                'newest_date': newest,
+                'date_range_days': (newest - oldest).days if oldest and newest else 0
+            }
+        except Exception as e:
+            session.rollback()
+            raise e
+
+
+def get_historical_pending_data(limit=10000, offset=0):
+    """Get batch of historical data (before today)"""
+    with Session() as session:
+        try:
+            today_start = datetime.datetime.now(
+                datetime.UTC if hasattr(datetime, 'UTC') else datetime.timezone.utc).replace(hour=0, minute=0, second=0,
+                                                                                             microsecond=0)
+
+            query = session.query(nmea_data).filter(
+                nmea_data.upload == False,
+                nmea_data.created_at < today_start
+            ).order_by(nmea_data.created_at).offset(offset).limit(limit).all()
+
+            result = []
+            for item in query:
+                result.append({
+                    'id': item.id,
+                    'nmea': item.nmea,
+                    'connection_id': item.connection_id,
+                    'created_at': item.created_at,
+                    'upload': item.upload
+                })
+            return result
+        except Exception as e:
+            session.rollback()
+            raise e
+
+def get_historical_pending_count():
+    with Session() as session:
+        try:
+            today_start = datetime.datetime.now(
+                datetime.UTC if hasattr(datetime, 'UTC') else datetime.timezone.utc).replace(hour=0, minute=0, second=0,
+                                                                                             microsecond=0)
+
+            count = session.query(nmea_data).filter(
+                nmea_data.upload == False,
+                nmea_data.created_at < today_start
+            ).count()
+            return count
         except Exception as e:
             session.rollback()
             raise e

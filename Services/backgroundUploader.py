@@ -3,8 +3,8 @@ import time
 import json
 from datetime import datetime, timedelta
 
-from Controllers.NMEA_controller import get_today_pending_data, mark_data_as_sent, mark_data_as_failed, \
-    get_today_pending_count, get_old_data_stats
+from Controllers.NMEA_controller import get_historical_pending_data, mark_data_as_sent, mark_data_as_failed, \
+    get_historical_pending_count, get_old_data_stats
 from Services.decoder import decode_ais
 from requests.exceptions import RequestException, Timeout, ConnectionError
 from Untils.logging_helper import sys_logger
@@ -18,7 +18,7 @@ config.read(config_path)
 API_URL = config['API']['AIS']
 MAX_RETRIES = 3
 TIMEOUT = 15
-BATCH_SIZE = 500
+BATCH_SIZE = 10000
 RETRY_DELAY = 30
 MAX_CONSECUTIVE_FAILED_BATCHES = 5
 
@@ -46,19 +46,19 @@ def send_batch_data(stop_event):
                 break
 
             # 1. Check total pending data
-            total_pending = get_today_pending_count()
-            sys_logger.info(f"📊 Total pending data TODAY in database: {total_pending}")
+            total_pending = get_historical_pending_count()
+            sys_logger.info(f"📊 Total pending data in database: {total_pending}")
 
             # 2. Get data from database
-            data = get_today_pending_data(BATCH_SIZE)
+            data = get_historical_pending_data(BATCH_SIZE)
             if not data:
-                sys_logger.info("No more pending data for today, upload complete!")
+                sys_logger.info("No more pending data for Old data, upload complete!")
                 if wait_with_interrupt(stop_event, TIMEOUT):
                     continue
                 else:
                     break
 
-            sys_logger.info(f"📡 Processing {len(data)} records from today...")
+            sys_logger.info(f"📡 Processing {len(data)} records from old data...")
 
             # 3. Process decoded data with better tracking
             decoded_list, successful_ids, failed_ids = process_data_batch_enhanced(data, stop_event)
@@ -79,7 +79,7 @@ def send_batch_data(stop_event):
                         _session_failed_ids.add(fid)
 
                 if repeated_failed_ids:
-                    sys_logger.warning(f"🚨 {len(repeated_failed_ids)} records for today were repeatedly failed, marking as permanently failed")
+                    sys_logger.warning(f"🚨 {len(repeated_failed_ids)} records for old data were repeatedly failed, marking as permanently failed")
                     try:
                         mark_data_as_failed(repeated_failed_ids, '"decode_failed_today')
                     except Exception as e:
@@ -90,7 +90,7 @@ def send_batch_data(stop_event):
 
             #5. Send decodable data to API
             if not decoded_list:
-                sys_logger.info(f"🚀 Attempting to send {len(decoded_list)} today's records to API")
+                sys_logger.info(f"🚀 Attempting to send {len(decoded_list)} old data's records to API")
                 success = send_to_api(decoded_list, successful_ids, stop_event)
                 if success:
                     retry_count = 0

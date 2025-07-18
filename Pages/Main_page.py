@@ -21,7 +21,7 @@ from Pages.Log_page import LogViewerDialog
 from Workers.receiver_worker import ReceiverWorker
 from Workers.sender_worker import SenderWorker
 from Workers.upload_worker import UploadWorker
-from Workers.worker_manager import WorkerManager
+from Workers.background_upload_worker import BackgroundUploadWorker
 
 from UI.components.progress_dialog import ProgressDialog
 
@@ -42,10 +42,19 @@ class AISViewer(BaseMainWindow):
         self.setup_connections()
         self.setup_status_bar()
         self.setup_tray_connections()
+        self.start_background_upload()
 
         self.setup_signals()
         self.restore_window_state()
         self.startup()
+
+    def start_background_upload(self):
+        """Start background uploader untuk data lama"""
+        self.worker_controller.start_worker('background_upload', BackgroundUploadWorker)
+
+    def stop_background_upload(self):
+        """Stop background uploader"""
+        self.worker_controller.stop_worker('background_upload')
 
     def setup_connections(self):
         self.worker_controller.status_changed.connect(self._handle_worker_status)
