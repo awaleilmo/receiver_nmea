@@ -1,3 +1,4 @@
+import configparser
 import sys
 import os
 import sqlite3
@@ -41,21 +42,51 @@ def Checkmigrate():
 
 
 def initialize_config():
-    """
-    Memastikan config.ini ada dengan konten default
-    Return: path ke config.ini
-    """
-    config_path = get_resource_path("config.ini")
+    """Membuat config.ini di folder yang sama dengan executable"""
+    config_path = get_resource_path("config.ini", is_config=True)
+
+    print(f"🛠 Mencoba membuat config.ini di: {config_path}")  # Debug
+
+    config_dir = os.path.dirname(config_path)
+    if config_dir:
+        os.makedirs(config_dir, exist_ok=True)
 
     if not os.path.exists(config_path):
         print("🛠 Membuat config.ini baru...")
         default_config = """[API]
-AIS = http://localhost:3002/api/v1/ais/bulk
-GET_STATION = http://localhost:3002/api/v1/station/check
-POST_STATION = http://localhost:3002/api/v1/station
+AIS = https://bytenusa.cloud/api/v1/ais/bulk
+GET_STATION = https://bytenusa.cloud/api/v1/station/check
+POST_STATION = https://bytenusa.cloud/api/v1/station
 """
-        with open(config_path, 'w') as f:
-            f.write(default_config)
+        try:
+            with open(config_path, 'w') as f:
+                f.write(default_config)
+            print(f"✅ Berhasil membuat config.ini di: {config_path}")
+
+            # Verifikasi file benar-benar ada
+            if os.path.exists(config_path):
+                print("🔍 Verifikasi: File config.ini berhasil dibuat")
+            else:
+                print("❌ Verifikasi: File config.ini tidak terdeteksi setelah pembuatan")
+
+        except Exception as e:
+            print(f"❌ Gagal membuat config.ini: {e}")
+            print(f"Detail error: {str(e)}")
+
+            # Coba alternatif lokasi jika gagal
+            alt_path = os.path.join(os.path.expanduser("~"), "nmea_config.ini")
+            print(f"⚠️ Mencoba alternatif path: {alt_path}")
+            try:
+                with open(alt_path, 'w') as f:
+                    f.write(default_config)
+                print(f"✅ Berhasil membuat config alternatif di: {alt_path}")
+                return alt_path
+            except Exception as alt_e:
+                print(f"❌ Gagal membuat config alternatif: {alt_e}")
+                raise
+    else:
+        print(f"✅ Config.ini sudah ada di: {config_path}")
+
     return config_path
 
 def MigrateRun():

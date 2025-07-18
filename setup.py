@@ -21,6 +21,7 @@ ADDITIONAL_FILES = [
     "Services/",
     "Workers/",
     "requirements.txt",
+    "config.ini",
 ]
 OUTPUT_DIR = "dist"
 VERSION = "1.0.0"
@@ -133,7 +134,7 @@ def prepare_database():
             cursor.execute('''
                 INSERT INTO config (api_server, created_at, updated_at)
                 VALUES (?, ?, ?)
-            ''', ("http://localhost:8000/api/ais_bulk", now, now))
+            ''', ("https://bytenusa.cloud/api/v1/ais/bulk", now, now))
 
         conn.commit()
         conn.close()
@@ -157,6 +158,7 @@ def build_app():
 
     pyinstaller_args = [
         "--onefile",
+        "--clean",
         "--windowed" if is_windows else "--noconsole",
         f"--name={APP_NAME}",
         f"--distpath={OUTPUT_DIR}",
@@ -164,6 +166,7 @@ def build_app():
         "--add-data=migrations.py;." if is_windows else "--add-data=migrations.py:.",
         "--add-data=nmea_data.db;." if is_windows else "--add-data=nmea_data.db:.",
         "--add-data=config.ini;." if is_windows else "--add-data=config.ini:.",
+        "--hidden-import=configparser",
         "--hidden-import=pathlib",
         "--hidden-import=shutil",
         "--hidden-import=PyQt6.QtCore",
