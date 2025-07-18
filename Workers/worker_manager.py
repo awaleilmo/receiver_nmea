@@ -12,7 +12,8 @@ class WorkerManager(QObject):
         self.workers = {
             'receiver': {'worker': None, 'stop_event': threading.Event()},
             'sender': {'worker': None, 'stop_event': threading.Event()},
-            'upload': {'worker': None, 'stop_event': threading.Event()}
+            'upload': {'worker': None, 'stop_event': threading.Event()},
+            'background_upload': {'worker': None, 'stop_event': threading.Event()}
         }
 
     def start_worker(self, worker_type, worker_class):
