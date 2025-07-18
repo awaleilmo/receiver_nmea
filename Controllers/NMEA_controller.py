@@ -1,5 +1,5 @@
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import func
+from sqlalchemy import func, text
 
 from Models import nmea_data
 from Models.__init__ import engine
@@ -35,6 +35,7 @@ def get_pending_data(batas=350):
     with Session() as session:
         try:
             query = session.query(nmea_data).filter_by(upload=False).order_by(nmea_data.created_at).limit(batas).all()
+
             result = []
             for item in query:
                 result.append({
@@ -60,7 +61,7 @@ def get_pending_count():
 
 def mark_data_as_sent(ids):
     if not ids:
-        return
+        return 0
 
     with Session() as session:
         try:
@@ -80,18 +81,13 @@ def mark_data_as_failed(ids, reason="decode_failed"):
     Tandai data yang gagal decode dengan tracking yang lebih baik
     """
     if not ids:
-        return
+        return 0
 
     with Session() as session:
         try:
-            current_time = datetime.datetime.now(datetime.UTC if hasattr(datetime, 'UTC') else datetime.timezone.utc)
-
             # Update dengan tracking yang lebih detail
             updated_count = session.query(nmea_data).filter(nmea_data.id.in_(ids)).update({
-                "decode_status": "failed",
-                "upload_error": reason,
-                "last_upload_attempt": current_time,
-                "upload_attempts": nmea_data.upload_attempts + 1
+                "upload": True,
             }, synchronize_session=False)
 
             session.commit()
@@ -102,70 +98,65 @@ def mark_data_as_failed(ids, reason="decode_failed"):
             signalsLogger.new_data_received.emit(f"Error marking failed data: {str(e)}")
             raise e
 
-def mark_data_as_decoded(ids):
-    """
-    Tandai data yang berhasil di-decode
-    """
-    if not ids:
-        return
+def get_decode_stats():
 
     with Session() as session:
         try:
-            current_time = datetime.datetime.now(datetime.UTC if hasattr(datetime, 'UTC') else datetime.timezone.utc)
 
-            updated_count = session.query(nmea_data).filter(nmea_data.id.in_(ids)).update({
-                "decode_status": "success",
-                "last_upload_attempt": current_time,
-                "upload_attempts": nmea_data.upload_attempts + 1
-            }, synchronize_session=False)
+            pending_count = session.query(func.count(nmea_data.id)).filter_by(upload=False).scalar()
+            uploaded_count = session.query(func.count(nmea_data.id)).filter_by(upload=True).scalar()
 
-            session.commit()
-            return updated_count
+            return {'pending': pending_count, 'uploaded': uploaded_count, 'total': pending_count + uploaded_count}
         except Exception as e:
             session.rollback()
             raise e
 
-def get_retry_candidates(limit=100):
-    """
-    Ambil kandidat untuk retry (failed records dengan attempts < 3)
-    """
+def get_recent_activity():
+
     with Session() as session:
         try:
-            current_time = datetime.datetime.now(datetime.UTC if hasattr(datetime, 'UTC') else datetime.timezone.utc)
-            retry_time = current_time - datetime.timedelta(minutes=30)  # Retry after 30 minutes
+            one_hour_ago = datetime.datetime.now(datetime.UTC if hasattr(datetime, 'UTC') else datetime.timezone.utc) - datetime.timedelta(hours=1)
 
-            query = session.query(nmea_data).filter(
-                nmea_data.decode_status == 'failed',
-                nmea_data.upload_attempts < 3,
-                (nmea_data.last_upload_attempt < retry_time) | (nmea_data.last_upload_attempt.is_(None))
-            ).order_by(nmea_data.created_at).limit(limit).all()
+            recent_additions = session.query(func.count(nmea_data.id)).filter(nmea_data.created_at >= one_hour_ago).scalar()
 
-            result = []
-            for item in query:
-                result.append({
-                    'id': item.id,
-                    'nmea': item.nmea,
-                    'connection_id': item.connection_id,
-                    'created_at': item.created_at,
-                    'upload_attempts': item.upload_attempts,
-                    'upload_error': item.upload_error
-                })
-            return result
+            recent_uploads = session.query(func.count(nmea_data.id)).filter(nmea_data.upload == True, nmea_data.created_at >= one_hour_ago).scalar()
+
+            return {'recent_additions': recent_additions, 'recent_uploads': recent_uploads}
         except Exception as e:
             session.rollback()
             raise e
 
 def get_ais_latest(last_send_id=None):
     with Session() as session:
-        query = session.query(nmea_data.id, nmea_data.nmea)
-        if last_send_id:
-            query = query.filter(nmea_data.id > last_send_id)
-        else:
-            utc_now = datetime.datetime.now(datetime.UTC if hasattr(datetime, 'UTC') else datetime.timezone.utc)
-            ten_seconds_ago = utc_now - datetime.timedelta(seconds=10)
-            query = query.filter(nmea_data.created_at >= ten_seconds_ago)
+       try:
+           query = session.query(nmea_data.id, nmea_data.nmea)
+           if last_send_id:
+               query = query.filter(nmea_data.id > last_send_id)
+           else:
+               utc_now = datetime.datetime.now(datetime.UTC if hasattr(datetime, 'UTC') else datetime.timezone.utc)
+               ten_seconds_ago = utc_now - datetime.timedelta(seconds=10)
+               query = query.filter(nmea_data.created_at >= ten_seconds_ago)
+           query = query.order_by(nmea_data.id.asc()).limit(1000)
+           result = session.execute(query).fetchall()
+           return result
+       except Exception as e:
+           session.rollback()
+           raise e
 
-        query = query.order_by(nmea_data.id.asc()).limit(1000)
+def reset_failed_uploads():
 
-        results = session.execute(query).fetchall()
-        return results
+    with Session() as session:
+        try:
+            old_timestamp = datetime.datetime.now(datetime.UTC if hasattr(datetime, 'UTC') else datetime.timezone.utc) - datetime.timedelta(hours=2)
+
+            reset_count = session.query(nmea_data).filter(
+                nmea_data.upload == True,
+                nmea_data.created_at < old_timestamp,
+                nmea_data.created_at > old_timestamp
+            ).update({"upload": False}, synchronize_session=False)
+            session.commit()
+            signalsLogger.new_data_received.emit(f"Reset {reset_count} potentially stuck records")
+            return reset_count
+        except Exception as e:
+            session.rollback()
+            raise e
