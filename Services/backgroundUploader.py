@@ -32,7 +32,7 @@ _session_stats = {
     'start_time': datetime.now()
 }
 
-def send_batch_data(stop_event):
+def send_batch_data_background_upload(stop_event):
     retry_count = 0
     last_success_time = datetime.now()
     consecutive_failed_batches = 0
