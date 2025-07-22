@@ -90,7 +90,7 @@ def send_batch_data_background_upload(stop_event):
                     sys_logger.info(f"📝 {len(new_failed_ids)} new failures, will retry in next batch")
 
             #5. Send decodable data to API
-            if not decoded_list:
+            if decoded_list:
                 sys_logger.info(f"🚀 Attempting to send {len(decoded_list)} old data's records to API")
                 success = send_to_api(decoded_list, successful_ids, stop_event)
                 if success:

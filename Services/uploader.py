@@ -90,7 +90,7 @@ def send_batch_data(stop_event):
                     sys_logger.info(f"📝 {len(new_failed_ids)} new failures, will retry in next batch")
 
             #5. Send decodable data to API
-            if not decoded_list:
+            if decoded_list:
                 sys_logger.info(f"🚀 Attempting to send {len(decoded_list)} today's records to API")
                 success = send_to_api(decoded_list, successful_ids, stop_event)
                 if success:
@@ -215,6 +215,7 @@ def send_to_api(data, ids, stop_event):
             )
 
             if response.status_code in (200, 201):
+                sys_logger.info(f"✅ API response: {response.status_code}")
                 mark_data_as_sent(ids)
                 return True
             else:
