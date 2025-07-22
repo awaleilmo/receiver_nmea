@@ -69,7 +69,8 @@ def send_batch_data(stop_event):
             if failed_ids:
                 sys_logger.warning(f"⚠️ {len(failed_ids)} records failed to decode, marking as failed")
 
-                new_failed_ids, repeated_failed_ids = []
+                new_failed_ids = []
+                repeated_failed_ids = []
 
                 for fid in failed_ids:
                     if fid not in _session_failed_ids:

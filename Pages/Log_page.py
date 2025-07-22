@@ -1,12 +1,10 @@
 import os
-import threading
-from datetime import datetime
 
-from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtCore import QTimer
 from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout,
                              QWidget, QPushButton, QTextEdit, QLabel,
                              QTabWidget, QComboBox, QSpinBox, QCheckBox, QFileDialog)
-from PyQt6.QtGui import QFont, QColor, QTextCursor
+from PyQt6.QtGui import QFont, QColor
 
 from Services.SignalsMessages import signalsLogger, signalsInfo
 from Untils.logging_helper import sys_logger, error_file_logger
@@ -38,6 +36,7 @@ class LogViewerTab(QWidget):
         self.refresh_interval_spin = QSpinBox()
         self.refresh_interval_spin.setRange(1, 60)
         self.refresh_interval_spin.setValue(5)
+        self.refresh_interval_spin.valueChanged.connect(self.update_refresh_interval)
 
         # View lines
         self.view_lines_label = QLabel("Lines to show:")
@@ -74,7 +73,7 @@ class LogViewerTab(QWidget):
         layout.addWidget(self.log_text)
 
         # Initialize auto-refresh timer
-        self.refresh_timer = QTimer()
+        self.refresh_timer = QTimer(self)
         self.refresh_timer.timeout.connect(self.load_log_content)
 
         # Load initial content
@@ -140,11 +139,19 @@ class LogViewerTab(QWidget):
         cursor.insertText(line)
 
     def toggle_auto_refresh(self, state):
-        if state == Qt.CheckState.Checked:
+        if state == 2:
             interval_ms = self.refresh_interval_spin.value() * 1000
             self.refresh_timer.start(interval_ms)
         else:
             self.refresh_timer.stop()
+
+    def update_refresh_interval(self):
+        """Update timer interval if auto-refresh is currently active"""
+        if self.auto_refresh_cb.isChecked() and self.refresh_timer.isActive():
+            interval_ms = self.refresh_interval_spin.value() * 1000
+            self.refresh_timer.start(interval_ms)  # Restart with new interval
+            if self.log_type == "system":
+                sys_logger.info(f"Auto-refresh interval updated to: {interval_ms}ms")
 
     def clear_log(self):
         try:
