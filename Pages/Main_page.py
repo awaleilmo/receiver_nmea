@@ -27,7 +27,7 @@ from UI.components.progress_dialog import ProgressDialog
 
 
 class AISViewer(BaseMainWindow):
-    MAX_LOG_ITEMS = 100000
+    MAX_LOG_ITEMS = 10000
     STATUS_MESSAGE_TIMEOUT = 5000
 
     def __init__(self):
